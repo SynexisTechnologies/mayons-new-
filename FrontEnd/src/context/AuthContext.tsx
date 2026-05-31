@@ -38,8 +38,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 const userObj = {
   email: (res as any).email || data.email,
   role: (res as any).role || "user",
-  firstName: (res as any).first_name || "",
-  lastName: (res as any).last_name || "",
+  firstName: (res as any).firstName || (res as any).first_name || "",
+  lastName: (res as any).lastName || (res as any).last_name || "",
 };
 
     setUser(userObj);

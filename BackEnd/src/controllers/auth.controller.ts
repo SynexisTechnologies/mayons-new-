@@ -178,16 +178,11 @@ export const login = async (req: Request, res: Response, next: NextFunction) => 
   // Check license expired
   if (today > (user.licenseExpire || today)) {
     licenseExpired = true;
-
-    //  auto update user status in DB if needed
     if (user.status !== "Inactive") {
       user.status = "Inactive";
       await user.save();
-       return res.status(403).json({ message: "Admin license expired ❌ Access blocked" });
-      console.log("⚠️ Admin license expired, status set to Inactive ✅");
     }
- return res.status(403).json({ message: "Admin license expired ❌ Access blocked" });
-    console.log("⚠️ Admin license expired, flag set true");
+    return res.status(403).json({ message: "Admin license expired. Access blocked." });
   }
 }
 
@@ -310,69 +305,46 @@ export const verifyResetOtp = async (req: Request, res: Response) => {
 
 
 
-export const refreshToken = async (req:Request,res:Response,next:NextFunction) =>{
-   
-   try{
+export const refreshToken = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const token = req.cookies?.refreshToken;
+    if (!token) return next(new APIError(401, "Refresh Token missing"));
 
-     const token  =  req.cookies?.refreshToken
+    let decoded: string | JwtPayload;
+    try {
+      decoded = jwt.verify(token, process.env.REFRESH_SECRETE_TOKEN!) as JwtPayload;
+    } catch (err) {
+      if (err instanceof TokenExpiredError) return next(new APIError(401, "Access Token Expired"));
+      if (err instanceof JsonWebTokenError) return next(new APIError(401, "Invalid Access Token"));
+      return next(new APIError(401, "Error Verifying Access Token"));
+    }
 
-     console.log("tokenddd",token)
+    if (!decoded || typeof decoded === "string") return next(new APIError(401, "Access Token Payload Error"));
 
-     if(!token){
-      throw new APIError(401,"Refresh Token missing")
-     }
+    const userID = (decoded as JwtPayload).userId as string;
+    const user = await userModel.findById(userID);
+    if (!user) return next(new APIError(401, "User not found"));
 
-     jwt.verify(
+    const newAccessToken = create_access_token(user._id.toString(), user.role.toString());
 
-       token,
-       process.env.REFRESH_SECRETE_TOKEN!,
-       async (error:Error | null,decoded:string | JwtPayload |undefined)=>{       
-         if(error){
-             if(error instanceof TokenExpiredError){
-                  throw new APIError(401,"Access Token Expired")
-            }else if (error instanceof JsonWebTokenError){
-                  throw new APIError(401,"Invalid Access Token")
-            }else{
-                  throw new APIError(401,"Error Verifying Access Token")
-            }
-         }
-        
-          if(!decoded || typeof decoded === "string"){
-               throw new APIError(401,"Error Access Token Payload Error")
-          }
-
-          const userID = decoded.userId as string;
-
-          console.log("ifsdf",userID)
-          const user =  await userModel.findById(userID)
-
-          if(!user){
-            throw new APIError(401,"user not found")
-          }
-
-          const newAccessToken = create_access_token(user._id.toString(),user.role.toString())
-          res.status(200).json({accessToken : newAccessToken,
-
-
-             user: {
-            id: user._id,
-            first_name: user.firstName,
-            last_name: user.lastName,
-            email: user.email,
-            role: user.role,
-            mobile: user.mobile,
-            createdAt: user.createdAt,
-          },
-          })
-
-       }
-     )
-    
-   }catch(error){
-         console.log(error)
-          next(error)
-   }
-} 
+    res.status(200).json({
+      accessToken: newAccessToken,
+      user: {
+        id: user._id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        first_name: user.firstName,
+        last_name: user.lastName,
+        email: user.email,
+        role: user.role,
+        mobile: user.mobile,
+        createdAt: user.createdAt,
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 
 export const getAllUsers =  async(req:Request,res:Response,next:NextFunction) =>{

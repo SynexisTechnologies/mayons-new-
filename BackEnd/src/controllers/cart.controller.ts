@@ -166,10 +166,10 @@ export const removeItemFromCart = async (req: Request, res: Response, next: Next
     }
     if (!cart) return res.status(404).json({ success: false, message: "Active cart not found" });
 
-    const item = cart.items.find(i => i._id?.toString() === itemId);
-    if (!item) return res.status(404).json({ success: false, message: "Item not found in cart" });
+    const itemIdx = cart.items.findIndex(i => i._id?.toString() === itemId);
+    if (itemIdx === -1) return res.status(404).json({ success: false, message: "Item not found in cart" });
 
-    item.remove();
+    cart.items.splice(itemIdx, 1);
     cart.totalPrice = calculateTotalPrice(cart.items);
 
     await cart.save();

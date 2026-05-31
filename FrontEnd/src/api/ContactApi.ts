@@ -5,5 +5,5 @@ export const submitContactAPI = (data: {
   email: string;
   message: string;
 }) => {
-  return axiosInstance.post("/contact", data);
+  return axiosInstance.post("/contact/send", data);
 };
