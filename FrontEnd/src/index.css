@@ -1,0 +1,134 @@
+@import "tailwindcss";
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
+
+
+:root {
+  font-family: 'Inter', sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+}
+
+/* Hide scrollbar completely */
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+@keyframes wordFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-word {
+  animation: wordFadeUp 0.6s ease-out forwards;
+}
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 1.2s ease-in-out forwards;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-scaleIn {
+  animation: scaleIn 0.25s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+.animate-slideIn {
+  animation: slideIn 0.25s ease-out;
+}
+
+/* Mobile-only responsive adjustments (max-width: 640px) */
+@media (max-width: 640px) {
+  /* ensure images and svgs scale down */
+  img, svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* make interactive controls span available width on small screens */
+  button, input, select, textarea {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* reduce base font-size slightly for small screens to avoid overflow */
+  :root {
+    font-size: 14px;
+  }
+
+  /* tighten page padding on small screens */
+  .max-w-7xl {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* make common grid layouts collapse to single column for mobile */
+  .grid.grid-cols-4, .grid.grid-cols-3, .grid.grid-cols-2 {
+    grid-template-columns: 1fr !important;
+    gap: 0.75rem !important;
+  }
+
+  /* allow search (hidden by default) to appear on mobile where useful */
+  nav .hidden.md\:flex {
+    display: flex !important;
+    width: 100% !important;
+    margin: 0.5rem 0 !important;
+  }
+
+  /* reduce navbar padding and stack items where necessary */
+  nav > div:first-child {
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+    height: auto !important;
+    align-items: center !important;
+  }
+
+  /* mobile menu: ensure menu area fits and is scrollable */
+  .md\:hidden.fixed.inset-x-0.top-\[72px\] {
+    max-height: calc(100vh - 64px) !important;
+    overflow-y: auto !important;
+  }
+
+  /* cards and product tiles should not overflow horizontally */
+  .card, .product-card, .eat-card, .events-card {
+    width: 100% !important;
+  }
+
+  /* smaller headings on mobile to prevent wrapping issues */
+  h1, h2, h3, h4, h5 {
+    line-height: 1.25 !important;
+  }
+}
