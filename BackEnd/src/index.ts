@@ -5,9 +5,8 @@ import rootRouter from "./routes";
 import { errorHandler } from "./middlewares/errorHandler";
 import cookieParser from "cookie-parser";
 import cors from "cors";
-import { userModel } from "./models/userModel";
-import bcrypt from "bcrypt";
 import { seedStatus } from "./util/StatusInitializer";
+import { seedAdmin } from "./util/seedAdmin";
 
 
 import CartModel from "./models/CartModel";
@@ -21,8 +20,10 @@ dotenv.config();
 
 const app = express();
 
-// Allowed frontend origins
-const allowedOrigins = ["http://localhost:5173", "http://localhost:5174"];
+const allowedOrigins = (process.env.CLIENT_ORIGIN || "http://localhost:5173")
+  .split(",")
+  .map((o) => o.trim())
+  .filter(Boolean);
 
 app.use(
   cors({
@@ -64,25 +65,7 @@ const startServer = async () => {
       const mongoose = (mongooseModule as any).default || mongooseModule;
       if (mongoose && mongoose.connection && mongoose.connection.readyState === 1) {
         await seedStatus();
-
-        // Create default admin if not exists
-        const existingUser = await userModel.findOne({ email: "admin@example.com" });
-        if (!existingUser) {
-          const hashedPassword = await bcrypt.hash("123456", 10);
-          await userModel.create({
-            firstName: "Admin",
-            lastName: "User",
-            email: "admin@example.com",
-            password: hashedPassword,
-            mobile: "0000000000",
-            role: "admin",
-            status: "Active",
-            isVerified: true,
-          });
-          console.log("👑 Default admin user created!");
-        } else {
-          console.log("ℹ️ Default admin already exists");
-        }
+        await seedAdmin();
 
         // Ensure cart user unique index does not conflict with null entries
         try {

@@ -1,4 +1,4 @@
-const BASE = "http://localhost:5000/api";
+const BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
 
 // Use singular `/product` routes to match backend `productRouter` mounting
 export const getProducts = async () =>

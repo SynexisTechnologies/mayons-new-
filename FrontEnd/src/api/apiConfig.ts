@@ -1,10 +1,9 @@
 import axios from "axios";
 
-const envBase = (import.meta as any)?.env?.VITE_API_BASE_URL || "/api";
+const baseURL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5001/api";
 
 export const axiosInstance = axios.create({
-  // prefer explicit VITE_API_BASE_URL, otherwise use relative `/api` so Vite proxy works
-  baseURL: envBase,
+  baseURL,
   withCredentials: true,
 });
 
@@ -64,7 +63,7 @@ axiosInstance.interceptors.response.use(
         try {
           // call refresh endpoint (cookie-based) using a plain axios instance
           const resp = await axios.post(
-            "http://localhost:5000/api/auth/refresh-token",
+            `${baseURL}/auth/refresh-token`,
             {},
             { withCredentials: true }
           );

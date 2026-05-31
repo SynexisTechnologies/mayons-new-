@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react"; 
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useFavorites } from "../context/FavoriteContext";
 import ProductCard from "../components/product/ProductCard";
@@ -6,6 +6,35 @@ import { Product } from "../components/product/types";
 import { productService } from "../services/ProductServices";
 import { megaCategories } from "../data/categories";
 import { useLanguage } from "../context/LanguageContext";
+import { SlidersHorizontal, ChevronDown, SearchX, Heart } from "lucide-react";
+
+const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
+
+function findParentTitleKey(subKey: string): string | null {
+  const n = norm(subKey);
+  function search(items: any[]): boolean {
+    for (const item of items) {
+      if (typeof item === "string") {
+        if (norm(item) === n) return true;
+      } else if (item?.titleKey) {
+        if (norm(item.titleKey) === n) return true;
+        if (search(item.items || [])) return true;
+      }
+    }
+    return false;
+  }
+  for (const group of megaCategories) {
+    if (search(group.items || [])) return group.titleKey.toLowerCase();
+  }
+  return null;
+}
+
+function getProductPrice(p: Product) {
+  if (p.discount && p.newPrice) return Number(p.newPrice);
+  if (p.price) return Number(p.price);
+  if (p.newPrice) return Number(p.newPrice);
+  return 0;
+}
 
 export default function ProductPage() {
   const { t } = useLanguage();
@@ -14,267 +43,354 @@ export default function ProductPage() {
   const { favorites } = useFavorites();
 
   const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("featured");
+  const [sortOpen, setSortOpen] = useState(false);
+  const sortRef = useRef<HTMLDivElement>(null);
 
-  // Get category from URL query
+  // Close sort dropdown when clicking outside
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setSortOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const cat = params.get("category") || "all";
     const s = params.get("search") || "";
-setCategory(cat.toLowerCase());
+    setCategory(cat.toLowerCase());
     setSearchQuery(s);
   }, [location.search]);
 
-  // Fetch products from backend
   useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        const data = await productService.getAll();
-        const formatted = data.map((p: any) => ({
-          ...p,
-          category: typeof p.category === "string"
-            ? p.category.toLowerCase()
-            : p.category?.name?.toLowerCase() || "",
-          subCategory: typeof p.subCategory === "string"
-            ? p.subCategory.toLowerCase()
-            : p.subCategory?.name?.toLowerCase() || "",
-        }));
-        setProducts(formatted);
-      } catch (err) {
-        console.error(err);
-      }
-    };
-    fetchProducts();
+    setLoading(true);
+    productService
+      .getAll()
+      .then((data: any[]) => {
+        setProducts(
+          data.map((p) => ({
+            ...p,
+            category:
+              typeof p.category === "string"
+                ? p.category.toLowerCase()
+                : p.category?.name?.toLowerCase() || "",
+            subCategory:
+              typeof p.subCategory === "string"
+                ? p.subCategory.toLowerCase()
+                : p.subCategory?.name?.toLowerCase() || "",
+          }))
+        );
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
   }, []);
 
-const mainCategories = [
-  { key: "all", label: "all" },
-  ...megaCategories.map((c) => ({
-    key: t(c.titleKey).toLowerCase(),   // REAL category name
-    label: c.titleKey,                  // for translation display
-  })),
-];
- 
-  const getProductPrice = (p: any) => {
-  if (p.discount && p.newPrice) return Number(p.newPrice);
-  if (p.price) return Number(p.price);
-  if (p.newPrice) return Number(p.newPrice);
-  return 0;
-};
+  const mainCategories = useMemo(
+    () => [
+      { key: "all", label: "all" },
+      ...megaCategories.map((c) => ({ key: c.titleKey.toLowerCase(), label: c.titleKey })),
+    ],
+    []
+  );
 
-const normalizeString = (str: string) =>
-  str
-    .toLowerCase()
-    .replace(/[^a-z0-9]/g, "");
+  const handleCategorySelect = useCallback(
+    (key: string) => {
+      navigate(key === "all" ? "/products" : `/products?category=${key}`);
+    },
+    [navigate]
+  );
+
+  const activeCategoryKey = useMemo(() => {
+    if (category === "all") return "all";
+    if (mainCategories.some((c) => c.key === category)) return category;
+    return findParentTitleKey(category) || "all";
+  }, [category, mainCategories]);
 
   const filteredProducts = useMemo(() => {
-  let filtered = [...products];
+    let filtered = [...products];
 
-  // If there's a search query, filter by product name, category or subCategory
-  if (searchQuery && searchQuery.trim() !== "") {
-    const normSearch = normalizeString(searchQuery);
-
-    // try to detect if search matches a translated subcategory label
-    let matchedSubKey: string | null = null;
-    for (const group of megaCategories) {
-      for (const item of group.items || []) {
-        const subKey = typeof item === "string" ? item : item.titleKey;
-        if (normalizeString(t(subKey)) === normSearch) {
-          matchedSubKey = subKey;
-          break;
+    if (searchQuery.trim()) {
+      const normSearch = norm(searchQuery);
+      let matchedSubKey: string | null = null;
+      outer: for (const group of megaCategories) {
+        for (const item of group.items || []) {
+          const subKey = typeof item === "string" ? item : item.titleKey;
+          if (norm(t(subKey)) === normSearch) {
+            matchedSubKey = subKey;
+            break outer;
+          }
         }
       }
-      if (matchedSubKey) break;
+      filtered = filtered.filter((p) => {
+        if ((p.nameEn || "").toLowerCase().includes(searchQuery.toLowerCase())) return true;
+        if ((p.nameSi || "").toLowerCase().includes(searchQuery.toLowerCase())) return true;
+        if (matchedSubKey) {
+          return (
+            norm(p.category || "") === norm(matchedSubKey) ||
+            norm(p.subCategory || "") === norm(matchedSubKey)
+          );
+        }
+        return (
+          norm(p.category || "").includes(normSearch) ||
+          norm(p.subCategory || "").includes(normSearch)
+        );
+      });
+    } else if (category !== "all") {
+      filtered = filtered.filter(
+        (p) =>
+          norm(p.category || "") === norm(category) ||
+          norm(p.subCategory || "") === norm(category)
+      );
     }
 
-    filtered = filtered.filter((p) => {
-      const nameEn = (p.nameEn || "").toLowerCase();
-      const nameSi = (p.nameSi || "").toLowerCase();
-
-      if (nameEn.includes(searchQuery.toLowerCase()) || nameSi.includes(searchQuery.toLowerCase())) return true;
-
-      if (matchedSubKey) {
-        return (
-          normalizeString(p.category || "") === normalizeString(matchedSubKey) ||
-          normalizeString(p.subCategory || "") === normalizeString(matchedSubKey)
+    switch (sortBy) {
+      case "price-low":
+        filtered.sort((a, b) => getProductPrice(a) - getProductPrice(b));
+        break;
+      case "price-high":
+        filtered.sort((a, b) => getProductPrice(b) - getProductPrice(a));
+        break;
+      case "newest":
+        filtered.sort(
+          (a, b) =>
+            new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime()
         );
-      }
+        break;
+      default:
+        filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+    }
 
-      return (
-        normalizeString(p.category || "").includes(normSearch) ||
-        normalizeString(p.subCategory || "").includes(normSearch)
+    return filtered;
+  }, [products, category, sortBy, t, searchQuery]);
+
+  const selectedMainCategory = useMemo(
+    () => megaCategories.find((c) => c.titleKey.toLowerCase() === category),
+    [category]
+  );
+
+  const groupedProducts = useMemo(() => {
+    if (!selectedMainCategory) return null;
+    const groups: Record<string, Product[]> = {};
+    (selectedMainCategory.items || []).forEach((item) => {
+      const subKey = typeof item === "string" ? item : item.titleKey;
+      groups[subKey] = filteredProducts.filter(
+        (p) => norm(p.subCategory || "") === norm(subKey)
       );
     });
-  } else if (category !== "all") {
-    filtered = filtered.filter(
-      (p) =>
-        normalizeString(p.category || "") === normalizeString(category) ||
-        normalizeString(p.subCategory || "") === normalizeString(category)
-    );
-  }
+    return groups;
+  }, [filteredProducts, selectedMainCategory]);
 
-  // Sorting code remains the same
-  switch (sortBy) {
-    case "price-low":
-      filtered.sort((a, b) => getProductPrice(a) - getProductPrice(b));
-      break;
+  const sortOptions = [
+    { value: "featured", label: "Featured" },
+    { value: "price-low", label: "Price: Low → High" },
+    { value: "price-high", label: "Price: High → Low" },
+    { value: "newest", label: "Newest First" },
+  ];
 
-    case "price-high":
-      filtered.sort((a, b) => getProductPrice(b) - getProductPrice(a));
-      break;
-
-    case "newest":
-      filtered.sort(
-        (a, b) =>
-          new Date(b.createdAt || "").getTime() -
-          new Date(a.createdAt || "").getTime()
-      );
-      break;
-
-    case "featured":
-    default:
-      filtered.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-      break;
-  }
-
-  return filtered;
-}, [products, category, sortBy, t]);
-
-// Get subcategories of selected main category
-const selectedMainCategory = megaCategories.find(
-  (c) => t(c.titleKey).toLowerCase() === category
-);
-
-const groupedProducts = useMemo(() => {
-  if (!selectedMainCategory) return null;
-
-  const groups: Record<string, Product[]> = {};
-
-  (selectedMainCategory.items || []).forEach((item) => {
-    const subKey = typeof item === "string" ? item : item.titleKey;
-    groups[subKey] = filteredProducts.filter(
-      (p) => normalizeString(p.subCategory || "") === normalizeString(subKey)
-    );
-  });
-
-  return groups;
-}, [filteredProducts, selectedMainCategory]);
+  const activeSortLabel = sortOptions.find((s) => s.value === sortBy)?.label ?? "Sort";
 
   return (
-    <main className="bg-[#1e3a5f]/5 min-h-screen">
-      {/* HERO SECTION */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0">
-          <img
-            src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1920&q=80"
-            className="w-full h-full object-cover"
-            alt="Products background"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#1e3a5f]/80 via-[#2a4a7c]/60 to-transparent" />
-        </div>
-
-        <div className="relative z-10 max-w-7xl mx-auto px-4 py-32 text-white">
-          <div className="max-w-2xl backdrop-blur-md bg-white/10 rounded-3xl p-8 sm:p-12 shadow-[0_10px_30px_#1e3a5f4d] text-center mx-auto">
-            <h1 className="text-3xl sm:text-5xl font-bold mb-6 leading-tight">
-              {t("allProducts")}
-            </h1>
-            <p className="text-sm sm:text-lg opacity-90 mb-8">{t("browse")}</p>
-            <button
-              onClick={() =>
-                document
-                  .getElementById("products-grid")
-                  ?.scrollIntoView({ behavior: "smooth" })
-              }
-              className="bg-[#1e3a5f] px-8 py-4 rounded-full hover:bg-[#2a4a7c] transition shadow-[0_6px_20px_#1e3a5f4d] text-[#d4af37] font-semibold"
-            >
-              {t("explore_products")}
-            </button>
-          </div>
+    <main className="min-h-screen bg-slate-50">
+      {/* ── HERO ── */}
+      <section className="relative h-56 sm:h-72 overflow-hidden">
+        <img
+          src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1920&q=80"
+          className="w-full h-full object-cover scale-105"
+          alt="Products"
+        />
+        <div className="absolute inset-0 bg-gradient-to-r from-[#1e3a5f]/90 via-[#1e3a5f]/60 to-[#1e3a5f]/10" />
+        <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4">
+          <span className="inline-block text-[#d4af37] text-xs font-bold tracking-[0.3em] uppercase mb-3 opacity-90">
+            Our Collection
+          </span>
+          <h1 className="text-3xl sm:text-5xl font-extrabold mb-2 tracking-tight drop-shadow">
+            {t("allProducts")}
+          </h1>
+          <p className="text-white/65 text-sm sm:text-base">{t("browse")}</p>
         </div>
       </section>
 
-      {/* FILTER + PRODUCT GRID */}
-      <section id="products-grid" className="max-w-7xl mx-auto px-4 py-12">
-        {/* FILTER BAR */}
-        <div className="flex flex-wrap justify-center gap-2 sm:gap-3 mb-10">
-          {mainCategories.map((cat) => (
+      {/* ── STICKY FILTER BAR ── */}
+      <div className="sticky top-[72px] md:top-[116px] z-20 bg-white/95 backdrop-blur-lg border-b border-gray-100 shadow-sm">
+        <div className="max-w-7xl mx-auto px-4">
+          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-3">
+            {mainCategories.map((cat) => {
+              const active = activeCategoryKey === cat.key;
+              return (
+                <button
+                  key={cat.key}
+                  onClick={() => handleCategorySelect(cat.key)}
+                  className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200
+                    ${active
+                      ? "bg-[#1e3a5f] text-[#d4af37] shadow-md"
+                      : "bg-slate-100 text-[#1e3a5f]/70 hover:bg-[#1e3a5f]/10 hover:text-[#1e3a5f]"
+                    }`}
+                >
+                  {cat.key === "all" ? t("all") : t(cat.label)}
+                </button>
+              );
+            })}
+
+            <div className="w-px h-5 bg-gray-200 flex-shrink-0 mx-1" />
+
             <button
-              key={cat.key}
-              onClick={() => setCategory(cat.key.toLowerCase())}
-              className={`px-6 py-3 rounded-full text-sm font-semibold transition shadow-[0_4px_12px_#1e3a5f4d]
-                ${
-                  category === cat.key.toLowerCase()
-                    ? "bg-[#1e3a5f] text-[#d4af37]"
-                    : "bg-white text-[#2a4a7c] hover:bg-[#1e3a5f]/10"
-                }`}
+              onClick={() => navigate("/favorites")}
+              className="flex-shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-rose-50 text-rose-600 hover:bg-rose-100 transition border border-rose-100"
             >
-              {t(cat.label)}
+              <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
+              {t("favorites")}
+              {favorites.length > 0 && (
+                <span className="bg-rose-500 text-white rounded-full px-1.5 py-0.5 text-[10px] leading-none">
+                  {favorites.length}
+                </span>
+              )}
             </button>
-          ))}
-          <button
-            onClick={() => navigate("/favorites")}
-            className="px-6 py-3 rounded-full text-sm font-semibold transition shadow-[0_4px_12px_#1e3a5f4d] bg-[#d4af37] text-[#1e3a5f] hover:scale-105"
-          >
-            ❤️ {t("favorites")} ({favorites.length})
-          </button>
+          </div>
+        </div>
+      </div>
+
+      {/* ── CONTENT ── */}
+      <section id="products-grid" className="max-w-7xl mx-auto px-4 py-8">
+        {/* Toolbar */}
+        <div className="flex items-center justify-between mb-7 flex-wrap gap-3">
+          <div className="text-sm text-slate-500">
+            {loading ? (
+              <span className="animate-pulse">Loading products…</span>
+            ) : (
+              <>
+                <span className="font-bold text-[#1e3a5f] text-base">{filteredProducts.length}</span>
+                <span> product{filteredProducts.length !== 1 ? "s" : ""}</span>
+                {category !== "all" && !searchQuery && (
+                  <>
+                    <span className="mx-1.5 text-slate-300">·</span>
+                    <span className="text-[#d4af37] font-semibold">{t(category) || category}</span>
+                  </>
+                )}
+                {searchQuery && (
+                  <>
+                    <span className="mx-1.5 text-slate-300">·</span>
+                    <span className="text-slate-600">"{searchQuery}"</span>
+                  </>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Sort */}
+          <div className="relative" ref={sortRef}>
+            <button
+              onClick={() => setSortOpen((o) => !o)}
+              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#1e3a5f] bg-white border border-slate-200 rounded-xl hover:border-[#1e3a5f]/40 transition shadow-sm"
+            >
+              <SlidersHorizontal className="w-3.5 h-3.5 text-[#d4af37]" />
+              {activeSortLabel}
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${sortOpen ? "rotate-180" : ""}`} />
+            </button>
+            {sortOpen && (
+              <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-scaleIn">
+                {sortOptions.map((opt) => (
+                  <button
+                    key={opt.value}
+                    onClick={() => { setSortBy(opt.value); setSortOpen(false); }}
+                    className={`w-full text-left px-4 py-3 text-sm transition
+                      ${sortBy === opt.value
+                        ? "bg-[#1e3a5f] text-[#d4af37] font-semibold"
+                        : "text-[#1e3a5f] hover:bg-slate-50"
+                      }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* SORT SELECT */}
-        <div className="flex justify-end mb-6">
-          <span className="text-[#2a4a7c] mr-2">Sort by:</span>
-          <select
-            value={sortBy}
-            onChange={(e) => setSortBy(e.target.value)}
-            className="px-4 py-2 border border-[#2a4a7c]/30 rounded-lg focus:ring-[#d4af37]"
-          >
-            <option value="featured">Featured</option>
-            <option value="price-low">Price: Low to High</option>
-            <option value="price-high">Price: High to Low</option>
-            <option value="newest">Newest</option>
-          </select>
-        </div>
+        {/* ── SKELETON ── */}
+        {loading && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse shadow-sm">
+                <div className="aspect-square bg-slate-200" />
+                <div className="p-4 space-y-2.5">
+                  <div className="h-4 bg-slate-200 rounded-full w-3/4" />
+                  <div className="h-3 bg-slate-200 rounded-full w-1/2" />
+                  <div className="h-3 bg-slate-200 rounded-full w-2/3" />
+                  <div className="h-9 bg-slate-200 rounded-xl mt-3" />
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
 
-        {/* PRODUCT GRID */}
-        {/* PRODUCT GRID */}
-{selectedMainCategory && groupedProducts ? (
-  <div className="space-y-12">
-    {(selectedMainCategory.items || []).map((item) => {
-      const subKey = typeof item === "string" ? item : item.titleKey;
-      const subProducts = groupedProducts[subKey];
+        {/* ── EMPTY ── */}
+        {!loading && filteredProducts.length === 0 && (
+          <div className="flex flex-col items-center justify-center py-28 text-center">
+            <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-5">
+              <SearchX className="w-9 h-9 text-slate-400" />
+            </div>
+            <h3 className="text-xl font-bold text-[#1e3a5f] mb-2">No products found</h3>
+            <p className="text-slate-400 text-sm mb-7">
+              Try a different category or clear your search
+            </p>
+            <button
+              onClick={() => navigate("/products")}
+              className="px-6 py-2.5 bg-[#1e3a5f] text-white rounded-full text-sm font-semibold hover:bg-[#2a4a7c] transition shadow-md"
+            >
+              View all products
+            </button>
+          </div>
+        )}
 
-      if (!subProducts || subProducts.length === 0) return null;
+        {/* ── GROUPED BY SUBCATEGORY ── */}
+        {!loading && filteredProducts.length > 0 && selectedMainCategory && groupedProducts && (
+          <div className="space-y-14">
+            {(selectedMainCategory.items || []).map((item) => {
+              const subKey = typeof item === "string" ? item : item.titleKey;
+              const subProducts = groupedProducts[subKey];
+              if (!subProducts || subProducts.length === 0) return null;
+              return (
+                <div key={subKey}>
+                  <div className="flex items-center gap-3 mb-6">
+                    <h2 className="text-lg font-bold text-[#1e3a5f] whitespace-nowrap">{t(subKey)}</h2>
+                    <span className="text-xs font-semibold text-[#d4af37] bg-[#1e3a5f]/8 px-2.5 py-1 rounded-full border border-[#d4af37]/20">
+                      {subProducts.length}
+                    </span>
+                    <div className="flex-1 h-px bg-gradient-to-r from-[#d4af37]/30 to-transparent" />
+                  </div>
+                  <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                    {subProducts.map((p) => (
+                      <ProductCard key={p._id} product={p} />
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
 
-      return (
-        <div key={subKey}>
-          {/* Subcategory Title */}
-          <h2 className="text-2xl font-bold text-[#1e3a5f] mb-6 border-b pb-2">
-            {t(subKey)}
-          </h2>
-
-          {/* Products Under Subcategory */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {subProducts.map((p: Product) => (
+        {/* ── FLAT GRID ── */}
+        {!loading && filteredProducts.length > 0 && !selectedMainCategory && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+            {filteredProducts.map((p) => (
               <ProductCard key={p._id} product={p} />
             ))}
           </div>
-        </div>
-      );
-    })}
-  </div>
-) : (
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    {filteredProducts.map((p) => (
-      <ProductCard key={p._id} product={p} />
-    ))}
-  </div>
-)}
+        )}
 
-        {/* FOOTER TEXT */}
-        <p className="text-center text-[#2a4a7c] mt-10">
-          {t("showing")} {filteredProducts.length} / {products.length}
-        </p>
+        {/* Footer count */}
+        {!loading && filteredProducts.length > 0 && (
+          <p className="text-center text-slate-400 text-sm mt-12">
+            Showing {filteredProducts.length} of {products.length} products
+          </p>
+        )}
       </section>
     </main>
   );

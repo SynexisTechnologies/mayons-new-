@@ -2,12 +2,12 @@
 import { Product } from "../components/product/types";
 import { Offer } from "../data/offer";
 import { productService } from "../services/ProductServices";
-import axios from "axios";
+import { axiosInstance } from "./apiConfig";
 
 // Fetch all offers
 export const getAllOffers = async (): Promise<Offer[]> => {
   // 1. Fetch admin-defined offers
-  const { data: adminOffers } = await axios.get<Offer[]>("/offers");
+  const { data: adminOffers } = await axiosInstance.get<Offer[]>("/offers");
 
   // 2. Fetch all products
   const products: Product[] = await productService.getAll();

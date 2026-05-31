@@ -95,9 +95,9 @@
     padding-right: 1rem !important;
   }
 
-  /* make common grid layouts collapse to single column for mobile */
-  .grid.grid-cols-4, .grid.grid-cols-3, .grid.grid-cols-2 {
-    grid-template-columns: 1fr !important;
+  /* collapse 3/4-column grids to single column on mobile, keep 2-column grids intact */
+  .grid.grid-cols-4, .grid.grid-cols-3 {
+    grid-template-columns: repeat(2, 1fr) !important;
     gap: 0.75rem !important;
   }
 

@@ -1,4 +1,4 @@
-                                                                                                                                                                                                                                                                                                                           import { useState, useEffect } from "react";
+                                                                                                                                                                                                                                                                                                                           import { useState, useEffect, useRef } from "react";
 import {
   ShoppingCart,
   User,
@@ -23,6 +23,7 @@ export default function Navbar() {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isMobileCategoryOpen, setIsMobileCategoryOpen] = useState(false);
+  const categoryCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [showSearchOverlay, setShowSearchOverlay] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -42,6 +43,15 @@ const toggleCategory = (key: string) => {
     ...prev,
     [key]: !prev[key],
   }));
+};
+
+const openCategoryMenu = () => {
+  if (categoryCloseTimer.current) clearTimeout(categoryCloseTimer.current);
+  setIsCategoryOpen(true);
+};
+
+const closeCategoryMenu = () => {
+  categoryCloseTimer.current = setTimeout(() => setIsCategoryOpen(false), 150);
 };
 
   useEffect(() => {
@@ -165,30 +175,20 @@ const renderCategory = (
   item: string | { titleKey: string; items?: any[] },
   level: number = 0
 ) => {
-  // STYLE based on category level
-  const levelStyles = [
-    "text-[#1e3a5f] font-semibold text-[15px]", // Main Category
-    "text-[#2a4a7c] font-medium text-[14px]",   // Sub Category
-    "text-gray-600 text-[13px]"                 // Nested Category
-  ];
-
-  const styleClass = levelStyles[level] || levelStyles[2];
-
-  // STRING CATEGORY (final item)
   if (typeof item === "string") {
     return (
-      <li
-        key={item}
-        onClick={() => {
-          navigate(`/products?category=${item}`);
-          setIsCategoryOpen(false);
-          setIsMobileMenuOpen(false);
-          setIsMobileCategoryOpen(false);
-        }}
-        className={`cursor-pointer hover:text-[#d4af37] ${styleClass}`}
-        style={{ paddingLeft: `${level * 16}px` }}
-      >
-        {t(item)}
+      <li key={item}>
+        <button
+          onClick={() => {
+            navigate(`/products?category=${item}`);
+            setIsCategoryOpen(false);
+            setIsMobileMenuOpen(false);
+            setIsMobileCategoryOpen(false);
+          }}
+          className="w-full text-left px-2 py-1.5 rounded-lg text-[12px] text-slate-600 hover:text-[#1e3a5f] hover:bg-[#1e3a5f]/5 transition-colors font-medium"
+        >
+          {t(item)}
+        </button>
       </li>
     );
   }
@@ -198,28 +198,24 @@ const renderCategory = (
 
   return (
     <li key={item.titleKey}>
-
-      {/* CATEGORY TITLE */}
-      <div
-        className={`flex justify-between items-center cursor-pointer hover:text-[#d4af37] ${styleClass}`}
-        style={{ paddingLeft: `${level * 16}px` }}
-        onClick={() => hasChildren && toggleCategory(item.titleKey)}
+      <button
+        className="w-full text-left flex justify-between items-center px-2 py-1.5 rounded-lg text-[12px] text-slate-700 hover:text-[#1e3a5f] hover:bg-[#1e3a5f]/5 transition-colors font-semibold"
+        onClick={() => {
+          navigate(`/products?category=${item.titleKey.toLowerCase()}`);
+          setIsCategoryOpen(false);
+          setIsMobileMenuOpen(false);
+          setIsMobileCategoryOpen(false);
+          if (hasChildren) toggleCategory(item.titleKey);
+        }}
       >
         <span>{t(item.titleKey)}</span>
-
         {hasChildren && (
-          <span className="text-xs ml-2">
-            {isOpen ? "▾" : "▸"}
-          </span>
+          <span className={`text-[10px] text-slate-400 transition-transform ${isOpen ? "rotate-90" : ""}`}>▶</span>
         )}
-      </div>
-
-      {/* CHILDREN */}
+      </button>
       {hasChildren && isOpen && (
-        <ul className="mt-1 space-y-1">
-          {item.items!.map((sub) =>
-            renderCategory(sub, level + 1)
-          )}
+        <ul className="ml-2 space-y-0.5 border-l border-[#d4af37]/20 pl-2">
+          {item.items!.map((sub) => renderCategory(sub, level + 1))}
         </ul>
       )}
     </li>
@@ -360,45 +356,50 @@ const renderCategory = (
   <div className="max-w-7xl mx-auto px-4 py-3 flex items-center relative">
 <div
   className="relative font-medium text-[#1e3a5f]"
-  onMouseEnter={() => setIsCategoryOpen(true)}
-  onMouseLeave={() => setIsCategoryOpen(false)}
+  onMouseEnter={openCategoryMenu}
+  onMouseLeave={closeCategoryMenu}
 >
   <span className="cursor-pointer hover:text-[#2a4a7c] select-none">
     ☰ {t("allCategory")}
   </span>
 
   {isCategoryOpen && (
-  <div className="absolute left-0 top-full mt-2 bg-white shadow-xl border rounded-xl w-[340px] z-50">
+  <div
+    className="absolute left-0 top-full mt-2 bg-white shadow-2xl border border-slate-100 rounded-2xl w-[320px] z-50 overflow-hidden"
+    onMouseEnter={openCategoryMenu}
+    onMouseLeave={closeCategoryMenu}
+  >
+    <div className="px-3 py-2 border-b border-slate-100 bg-slate-50/80">
+      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Browse by Category</p>
+    </div>
 
-    {/* Scroll container */}
-    <div className="max-h-[70vh] overflow-y-auto p-4">
-
-      <ul className="space-y-2">
+    <div className="max-h-[65vh] overflow-y-auto scrollbar-hide p-2">
+      <ul className="space-y-0.5">
         {megaCategories.map((group) => (
           <li key={group.titleKey}>
-            
-            {/* MAIN CATEGORY */}
             <div
-              className="flex justify-between items-center cursor-pointer text-[#1e3a5f] font-semibold text-[15px] hover:text-[#d4af37]"
-              onClick={() => toggleCategory(group.titleKey)}
+              className="flex justify-between items-center px-3 py-2 rounded-xl cursor-pointer text-[#1e3a5f] font-semibold text-[13px] hover:bg-[#1e3a5f]/5 hover:text-[#1e3a5f] transition-colors"
+              onClick={() => {
+                navigate(`/products?category=${group.titleKey.toLowerCase()}`);
+                setIsCategoryOpen(false);
+                setIsMobileMenuOpen(false);
+                if (group.items?.length) toggleCategory(group.titleKey);
+              }}
             >
-              {t(group.titleKey)}
-              <span className="text-xs">
-                {expandedCategories[group.titleKey] ? "▾" : "▸"}
-              </span>
+              <span>{t(group.titleKey)}</span>
+              {group.items?.length ? (
+                <span className={`text-[10px] text-slate-400 transition-transform ${expandedCategories[group.titleKey] ? "rotate-90" : ""}`}>▶</span>
+              ) : null}
             </div>
 
-            {/* SUB CATEGORIES */}
             {expandedCategories[group.titleKey] && group.items && (
-              <ul className="mt-2 space-y-1 pl-4">
+              <ul className="ml-2 mb-1 space-y-0.5 border-l-2 border-[#d4af37]/30 pl-3">
                 {group.items.map((item) => renderCategory(item, 1))}
               </ul>
             )}
-
           </li>
         ))}
       </ul>
-
     </div>
   </div>
 )}
@@ -506,14 +507,21 @@ const renderCategory = (
       </button>
 
 {isMobileCategoryOpen && (
-  <div className="space-y-4 pl-2">
+  <div className="space-y-1">
     {megaCategories.map((group) => (
       <div key={group.titleKey}>
-        <h4 className="text-[#2a4a7c] font-semibold mb-2">
+        <button
+          className="w-full text-left flex justify-between items-center px-3 py-2 rounded-xl text-[13px] font-bold text-[#1e3a5f] hover:bg-[#1e3a5f]/5 transition"
+          onClick={() => {
+            navigate(`/products?category=${group.titleKey.toLowerCase()}`);
+            setIsMobileMenuOpen(false);
+            setIsMobileCategoryOpen(false);
+          }}
+        >
           {t(group.titleKey)}
-        </h4>
+        </button>
         {group.items && group.items.length > 0 && (
-          <ul className="space-y-1">
+          <ul className="ml-3 border-l-2 border-[#d4af37]/30 pl-3 space-y-0.5">
             {group.items.map((item) => renderCategory(item))}
           </ul>
         )}

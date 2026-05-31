@@ -27,42 +27,23 @@ export const verifyOtp = async (data: { email: string; otp: string }) => {
   return axiosInstance.post("/auth/verify-otp", data);
 };
 
-const API = "http://localhost:5000/api/auth";
-
 export const getResetUser = async (email: string) => {
-  const res = await fetch(`${API}/get-reset-user`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email }),
-  });
-
-  return res.json();
+  const res = await axiosInstance.post("/auth/get-reset-user", { email });
+  return res.data;
 };
 
 export const resetPassword = async (email: string, newPassword: string) => {
-  const res = await fetch(`${API}/reset-password`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, newPassword }),
-  });
-  return res.json();
+  const res = await axiosInstance.post("/auth/reset-password", { email, newPassword });
+  return res.data;
 };
 
 export const requestPasswordResetOTP = async (email: string) => {
-  const res = await fetch(`${API}/send-reset-otp`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email }),
-  });
-  return res.json();
+  const res = await axiosInstance.post("/auth/send-reset-otp", { email });
+  return res.data;
 };
 
 export const verifyPasswordResetOTP = async (email: string, otp: string) => {
-  const res = await fetch(`${API}/verify-reset-otp`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, otp }),
-  });
-  return res.json();
+  const res = await axiosInstance.post("/auth/verify-reset-otp", { email, otp });
+  return res.data;
 };
 

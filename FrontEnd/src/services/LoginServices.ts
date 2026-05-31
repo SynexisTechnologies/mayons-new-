@@ -1,16 +1,12 @@
-// loginService.ts
-import axios from "axios";
+import { axiosInstance } from "../api/apiConfig";
 
 export const loginUser = async (email: string, password: string) => {
-  const res = await axios.post("http://localhost:5000/api/auth/login", {
-    email,
-    password,
-  });
+  const res = await axiosInstance.post("/auth/login", { email, password });
 
-  const { accessToken } = res.data; // adjust if your backend returns differently
+  const { accessToken } = res.data;
 
   if (accessToken) {
-    localStorage.setItem("accessToken", accessToken); // ✅ save token
+    localStorage.setItem("accessToken", accessToken);
   }
 
   return res.data;

@@ -34,7 +34,6 @@ export const CartProvider = ({ children }: { children: ReactNode }) => {
   const [items, setItems] = useState<CartItem[]>([]);
   const { user } = useAuth();
 
-  // use shared api axios instance (base http://localhost:5000/api)
   const axiosInstance = api;
 
     
