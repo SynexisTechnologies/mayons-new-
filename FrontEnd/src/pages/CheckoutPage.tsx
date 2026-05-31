@@ -147,7 +147,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           {/* LEFT SIDE */}
           <div className="lg:col-span-2 space-y-6">
 
-            <div className="bg-white p-6 rounded-xl shadow-md">
+            <div className="bg-white p-7 rounded-2xl border border-slate-100 shadow-sm">
               <div className="flex items-center gap-2 mb-6">
                 <Truck className="text-[#d4af37]" />
                 <h2 className="text-xl font-bold text-[#1e3a5f]">
@@ -167,7 +167,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     name="name"
                     value={formData.name}
                     onChange={handleChange}
-                    className="w-full border px-4 py-3 rounded-lg"
+                    className="w-full border border-slate-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#1e3a5f] focus:ring-2 focus:ring-[#1e3a5f]/10 transition"
                   />
                   {errors.name && (
                     <p className="text-red-500 text-xs">{errors.name}</p>
@@ -184,7 +184,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     name="phone"
                     value={formData.phone}
                     onChange={handleChange}
-                    className="w-full border px-4 py-3 rounded-lg"
+                    className="w-full border border-slate-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#1e3a5f] focus:ring-2 focus:ring-[#1e3a5f]/10 transition"
                   />
                   {errors.phone && (
                     <p className="text-red-500 text-xs">{errors.phone}</p>
@@ -214,7 +214,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     name="address"
                     value={formData.address}
                     onChange={handleChange}
-                    className="w-full border px-4 py-3 rounded-lg"
+                    className="w-full border border-slate-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#1e3a5f] focus:ring-2 focus:ring-[#1e3a5f]/10 transition"
                   />
                   {errors.address && (
                     <p className="text-red-500 text-xs">{errors.address}</p>
@@ -229,14 +229,14 @@ const handleSubmit = async (e: React.FormEvent) => {
                     value={formData.city}
                     onChange={handleChange}
                     placeholder={t("City")}
-                    className="border px-4 py-3 rounded-lg w-full"
+                    className="border border-slate-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#1e3a5f] focus:ring-2 focus:ring-[#1e3a5f]/10 transition w-full"
                   />
 
                   <select
                     name="locationType"
                     value={formData.locationType}
                     onChange={handleChange}
-                    className="border px-4 py-3 rounded-lg w-full"
+                    className="border border-slate-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#1e3a5f] focus:ring-2 focus:ring-[#1e3a5f]/10 transition w-full"
                   >
                     <option value="">{t("Select_Option")}</option>
                     <option value="home">{t("home1")}</option>
@@ -253,7 +253,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     name="deliveryDate"
                     value={formData.deliveryDate}
                     onChange={handleChange}
-                    className="w-full border px-4 py-3 rounded-lg"
+                    className="w-full border border-slate-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#1e3a5f] focus:ring-2 focus:ring-[#1e3a5f]/10 transition"
                   />
                 </div>
 
@@ -275,11 +275,11 @@ const handleSubmit = async (e: React.FormEvent) => {
         onClick={() =>
           setFormData({ ...formData, deliveryTimeSlot: slot })
         }
-        className={`border rounded-lg py-3 px-4 text-sm transition
+        className={`border rounded-xl py-3 px-4 text-sm font-medium transition cursor-pointer
           ${
             formData.deliveryTimeSlot === slot
-              ? "border-green-500 bg-green-50 text-green-700"
-              : "border-gray-300 hover:border-green-400"
+              ? "border-[#1e3a5f] bg-[#1e3a5f]/5 text-[#1e3a5f]"
+              : "border-slate-200 text-slate-600 hover:border-[#1e3a5f]/40"
           }
         `}
       >
@@ -303,7 +303,7 @@ const handleSubmit = async (e: React.FormEvent) => {
                     value={formData.deliveryInstructions}
                     onChange={handleChange}
                     rows={3}
-                    className="w-full border px-4 py-3 rounded-lg"
+                    className="w-full border border-slate-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#1e3a5f] focus:ring-2 focus:ring-[#1e3a5f]/10 transition"
                   />
                   <p className="text-red-500 text-xs">
                     {t("No_Special_Time_Request")}
@@ -315,7 +315,7 @@ const handleSubmit = async (e: React.FormEvent) => {
           </div>
 
           {/* RIGHT SIDE */}
-          <div className="bg-white rounded-xl p-6 shadow-md sticky top-32">
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-7 sticky top-36">
             <h2 className="text-xl font-bold text-[#1e3a5f] mb-4">
               {t("Order_Summary")}
             </h2>
@@ -374,7 +374,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
             <button
               type="submit"
-              className="w-full bg-[#1e3a5f] text-white py-3 rounded-full mt-6 hover:opacity-90"
+              className="w-full bg-[#1e3a5f] text-white py-3.5 rounded-xl mt-6 font-bold hover:bg-[#2a4a7c] transition shadow-sm cursor-pointer text-sm"
             >
               {t("Place_Order")}
             </button>
