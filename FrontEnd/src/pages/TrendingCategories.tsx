@@ -1,159 +1,133 @@
 import { useLanguage } from "../context/LanguageContext";
 import { useNavigate } from "react-router-dom";
+import { ArrowRight, Sparkles } from "lucide-react";
 
-type FloatingItem = {
-  icon: string;
-  top?: string;
-  left?: string;
-  right?: string;
-  size: string;
-  rotate: string;
-};
+const featureCards = [
+  {
+    tag: "Daily Essentials",
+    titleKey: "cat_products",
+    subtitleKey: "cat_products_sub",
+    image: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=800&q=80",
+    href: "/products?category=groceryshop",
+  },
+  {
+    tag: "Wellness & Beauty",
+    titleKey: "cat_beauty",
+    subtitleKey: "cat_beauty_sub",
+    image: "https://images.unsplash.com/photo-1556228720-195a672e8a03?w=800&q=80",
+    href: "/products?category=cosmetics",
+  },
+  {
+    tag: "Home & Living",
+    titleKey: "cat_home",
+    subtitleKey: "cat_home_sub",
+    image: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800&q=80",
+    href: "/products?category=kitchenitems",
+  },
+];
+
+const allCategories = [
+  { key: "Meat and Poultry",     image: "https://img.freepik.com/free-photo/raw-chicken-fillet-with-garlic-pepper-rosemary-wooden-chopping-board_1150-37784.jpg" },
+  { key: "Fruits and Vegetables",image: "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=200&q=80" },
+  { key: "Grains and Minerals",  image: "https://img.freepik.com/premium-photo/collection-grains-isolated-white-background_999327-76532.jpg?w=400" },
+  { key: "Dairy Products",       image: "https://images.unsplash.com/photo-1550583724-b2692b85b150?w=200&q=80" },
+  { key: "Herbs and Spices",     image: "https://images.unsplash.com/photo-1596040033229-a9821ebd058d?w=200&q=80" },
+  { key: "Packaged Foods",       image: "https://images.unsplash.com/photo-1604908176997-43197a92c02c?w=200&q=80" },
+  { key: "Snacks",               image: "https://images.unsplash.com/photo-1621447504864-d8686e12698c?w=200&q=80" },
+  { key: "Oilseeds and Oils",    image: "https://images.unsplash.com/photo-1474979266404-7eaacbcd87c5?w=200&q=80" },
+  { key: "Sweeteners",           image: "https://images.unsplash.com/photo-1558642891-54be180ea339?w=200&q=80" },
+  { key: "Cosmetics",            image: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=200&q=80" },
+  { key: "Skincare",             image: "https://images.unsplash.com/photo-1556228578-8c89e6adf883?w=200&q=80" },
+  { key: "Essential Oils",       image: "https://images.unsplash.com/photo-1608571423902-eed4a5ad8108?w=200&q=80" },
+  { key: "Tea & Coffee",         image: "https://images.unsplash.com/photo-1544787219-7f47ccb76574?w=200&q=80" },
+  { key: "Home Textiles",        image: "https://images.unsplash.com/photo-1631049307264-da0ec9d70304?w=200&q=80" },
+  { key: "Apparel",              image: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=200&q=80" },
+  { key: "Hoodies",              image: "https://images.unsplash.com/photo-1509942774463-acf339cf87d5?w=200&q=80" },
+  { key: "Baby Clothing",        image: "https://images.unsplash.com/photo-1522771930-78848d9293e8?w=200&q=80" },
+  { key: "Pet Products",         image: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=200&q=80" },
+  { key: "Cleaning Products",    image: "https://images.unsplash.com/photo-1563453392212-326f5e854473?w=200&q=80" },
+  { key: "Garden Supplies",      image: "https://images.unsplash.com/photo-1416879595882-3373a0480b5b?w=200&q=80" },
+];
 
 export default function TrendingCategories() {
   const { t } = useLanguage();
   const navigate = useNavigate();
-  /* ================= TRENDING CARDS ================= */
-  const categories = [
-    {
-      title: t("cat_products"),
-      subtitle: t("cat_products_sub"),
-      gradient: "from-[#2a4a7c] to-[#1e3a5f4d]",
-      icon: "🥦",
-    },
-    {
-      title: t("cat_beauty"),
-      subtitle: t("cat_beauty_sub"),
-      gradient: "from-[#2a4a7c] to-[#1e3a5f4d]",
-      icon: "🧴",
-    },
-    {
-      title: t("cat_home"),
-      subtitle: t("cat_home_sub"),
-      gradient: "from-[#2a4a7c] to-[#1e3a5f4d]",
-      icon: "🏡",
-    },
-  ];
-
-  /* ================= FLOATING ITEMS ================= */
-  const floatingItems: FloatingItem[] = [
-    { icon: "🥕", top: "8%", left: "6%", size: "text-6xl", rotate: "-15deg" },
-    { icon: "🍋", top: "8%", right: "6%", size: "text-7xl", rotate: "12deg" },
-    { icon: "🧴", top: "15%", right: "10%", size: "text-5xl", rotate: "-10deg" },
-    { icon: "☕", top: "15%", left: "10%", size: "text-6xl", rotate: "18deg" },
-    { icon: "👕", top: "12%", right: "15%", size: "text-5xl", rotate: "0deg" },
-    { icon: "🍪", top: "12%", left: "15%", size: "text-5xl", rotate: "0deg" },
-  ];
-
-  /* ================= ALL CATEGORIES (20) ================= */
-  const allCategories = [
-    { key: "Meat and Poultry", image: "https://img.freepik.com/free-photo/raw-chicken-fillet-with-garlic-pepper-rosemary-wooden-chopping-board_1150-37784.jpg" },
-    { key: "Fruits and Vegetables", image: "https://th.bing.com/th/id/R.0eae128c18f3d9bf47f68c3cd88eded3?rik=vSon220K%2bdBnwg&pid=ImgRaw&r=0" },
-    { key: "Grains and Minerals", image: "https://img.freepik.com/premium-photo/collection-grains-isolated-white-background_999327-76532.jpg?w=996" },
-    { key: "Dairy Products", image: "https://as1.ftcdn.net/v2/jpg/07/33/86/76/1000_F_733867688_YmSJ32Kv9XP7Ei7eVYCjKV52hxOJHRr9.jpg" },
-    { key: "Herbs and Spices", image: "https://th.bing.com/th/id/R.09cae6c1ce7d546c95d2e0cc4b1f6192?rik=tD9jaBqff4tfNA&pid=ImgRaw&r=0" },
-    { key: "Packaged Foods", image: "https://c8.alamy.com/comp/G1PG0W/arrangement-of-various-types-of-food-packaging-G1PG0W.jpg" },
-    { key: "Snacks", image: "https://thumbs.dreamstime.com/z/snacks-small-amounts-food-eaten-meals-close-up-phot-snacks-small-amounts-food-eaten-meals-close-up-photo-vf-320481137.jpg" },
-    { key: "Oilseeds and Oils", image: "https://th.bing.com/th/id/OIP.v-spwH3jz1SOGSqN5LsYfAHaE7?w=273&h=182&c=7&r=0&o=7&cb=defcachec2&dpr=1.3&pid=1.7&rm=3g" },
-    { key: "Sweeteners", image: "https://tse4.mm.bing.net/th/id/OIP.0Zv9CB3fs6AtE21JFiJZfwHaEJ?cb=defcachec2&rs=1&pid=ImgDetMain&o=7&rm=3" },
-    { key: "Cosmetics", image: "https://images.news18.com/ibnlive/uploads/2021/10/makeup-kit-16349877184x3.jpg" },
-    { key: "Skincare", image: "https://png.pngtree.com/thumb_back/fw800/background/20240611/pngtree-natural-skincare-product-assortment-image_15866783.jpg" },
-    { key: "Essential Oils", image: "https://aromatherapynaturals.com/wp-content/uploads/2023/10/what-ailments-can-aromatherapy-help_84_IP387094.jpg" },
-    { key: "Tea & Coffee", image: "https://tse4.mm.bing.net/th/id/OIP.CqKJe7zNtu1xiWqWnUE3UgHaFj?cb=defcachec2&rs=1&pid=ImgDetMain&o=7&rm=3" },
-    { key: "Home Textiles", image: "https://tse1.mm.bing.net/th/id/OIP.coGLFPEsXLx1xyoEIOMqbgHaE8?cb=defcachec2&w=1600&h=1067&rs=1&pid=ImgDetMain&o=7&rm=3" },
-    { key: "Apparel", image: "https://static.fibre2fashion.com/Newsresource/images/285/shutterstock-360084356_296925.jpg" },
-    { key: "Hoodies", image: "https://tse1.mm.bing.net/th/id/OIP.P5_zivtqQGlGe9qPHSjmcgHaE8?cb=defcachec2&rs=1&pid=ImgDetMain&o=7&rm=3" },
-    { key: "Baby Clothing", image: "https://tse3.mm.bing.net/th/id/OIP.DbOotGCr84uYPJDdjEiqJQHaHa?cb=defcachec2&w=626&h=626&rs=1&pid=ImgDetMain&o=7&rm=3" },
-    { key: "Pet Products", image: "https://m.media-amazon.com/images/I/81nD4P23IDS._AC_SL1500_.jpg" },
-    { key: "Cleaning Products", image: "https://assets.bonappetit.com/photos/63e6c29840953eab0f1ffca3/16:9/w_2560%2Cc_limit/Best_cleaning_products.jpg" },
-    { key: "Garden Supplies", image: "https://tse4.mm.bing.net/th/id/OIP.Q8fi6xV3l68Pr-YltvhOYAHaE7?cb=defcachec2&rs=1&pid=ImgDetMain&o=7&rm=3" },
-  ];
 
   return (
-    <section className="relative bg-gray-50 py-20 overflow-hidden">
-      {/* ================= FLOATING ICONS ================= */}
-      {floatingItems.map((item, index) => (
-        <div
-          key={index}
-          className={`absolute ${item.size} opacity-80 animate-float`}
-          style={{
-            top: item.top,
-            left: item.left,
-            right: item.right,
-            transform: `rotate(${item.rotate})`,
-            animationDelay: `${index * 0.5}s`,
-          }}
-        >
-          {item.icon}
-        </div>
-      ))}
+    <section className="bg-white py-20">
+      <div className="max-w-7xl mx-auto px-4">
 
-      <div className="max-w-7xl mx-auto px-4 relative z-10">
-        {/* ================= HEADER ================= */}
+        {/* ── Section Header ── */}
         <div className="text-center mb-14">
-          <div className="flex justify-center items-center gap-2 text-green-700 text-sm font-semibold mb-3">
-            <span className="w-2 h-2 bg-green-600 rounded-full" />
-            <span className="w-2 h-2 bg-green-600 rounded-full" />
-            <span className="w-2 h-2 bg-green-600 rounded-full" />
-            <span>{t("trendingBadge")}</span>
+          <div className="inline-flex items-center gap-2 bg-[#d4af37]/15 text-[#1e3a5f] px-4 py-1.5 rounded-full text-xs font-bold tracking-[0.15em] uppercase mb-4">
+            <Sparkles className="w-3.5 h-3.5 text-[#d4af37]" />
+            {t("trendingBadge")}
           </div>
-
-          <h2 className="text-4xl md:text-5xl font-bold text-gray-800">
+          <h2 className="text-3xl md:text-4xl font-extrabold text-[#1e3a5f] mb-3">
             {t("trendingTitle")}
           </h2>
+          <p className="text-slate-400 text-sm max-w-xl mx-auto">
+            Explore our curated collections across lifestyle, beauty, and home essentials.
+          </p>
         </div>
 
-        {/* ================= TRENDING CARDS ================= */}
-        <div className="grid md:grid-cols-3 gap-10 mb-20">
-          {categories.map((cat, i) => (
+        {/* ── Feature Cards ── */}
+        <div className="grid md:grid-cols-3 gap-6 mb-16">
+          {featureCards.map((card) => (
             <div
-              key={i}
-              className={`group bg-gradient-to-br ${cat.gradient}
-              rounded-3xl p-8 h-64 text-white relative overflow-hidden 
-              transform hover:-translate-y-2 transition-all duration-200 shadow-xl`}
+              key={card.titleKey}
+              onClick={() => navigate(card.href)}
+              className="relative rounded-3xl overflow-hidden h-72 group cursor-pointer shadow-md hover:shadow-xl transition-shadow duration-300"
             >
-              <div className="text-5xl mb-4">{cat.icon}</div>
-              <h3 className="text-3xl font-bold">{cat.title}</h3>
-              <p className="mt-2 opacity-90">{cat.subtitle}</p>
-
-              <button onClick={() => navigate("/products")}  className="absolute bottom-4 right-6 bg-white text-gray-600 px-4 py-2 rounded-full font-semibold hover:scale-100 transition">
-                {t("shopNow")} →
-              </button>
+              <img
+                src={card.image}
+                alt={t(card.titleKey)}
+                className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#1e3a5f]/90 via-[#1e3a5f]/40 to-transparent" />
+              <div className="absolute bottom-0 left-0 p-6 text-white">
+                <p className="text-[10px] font-bold tracking-[0.2em] uppercase text-[#d4af37] mb-1">{card.tag}</p>
+                <h3 className="text-xl font-extrabold mb-1 leading-tight">{t(card.titleKey)}</h3>
+                <p className="text-white/65 text-xs mb-3">{t(card.subtitleKey)}</p>
+                <span className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#d4af37] group-hover:gap-3 transition-all">
+                  {t("shopNow")} <ArrowRight className="w-4 h-4" />
+                </span>
+              </div>
             </div>
           ))}
         </div>
 
-        {/* ================= ALL CATEGORIES GRID ================= */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 lg:grid-cols-10 gap-6">
-          {allCategories.map((cat, i) => (
+        {/* ── Divider ── */}
+        <div className="flex items-center gap-4 mb-10">
+          <div className="flex-1 h-px bg-slate-100" />
+          <span className="text-xs font-bold tracking-[0.2em] uppercase text-slate-300">All Categories</span>
+          <div className="flex-1 h-px bg-slate-100" />
+        </div>
+
+        {/* ── Category Icon Grid ── */}
+        <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-7 lg:grid-cols-10 gap-3">
+          {allCategories.map((cat) => (
             <div
-              key={i}
-              className="flex flex-col items-center text-center bg-white rounded-xl p-4 shadow hover:shadow-lg transition"
+              key={cat.key}
+              onClick={() => navigate(`/products?search=${encodeURIComponent(cat.key)}`)}
+              className="flex flex-col items-center text-center gap-2 p-3 rounded-2xl hover:bg-slate-50 transition-colors cursor-pointer group"
             >
-              <div className="w-16 h-16 mb-2 rounded-full overflow-hidden bg-gray-100 flex items-center justify-center">
+              <div className="w-12 h-12 rounded-full overflow-hidden ring-2 ring-slate-100 group-hover:ring-[#d4af37]/50 transition-all shadow-sm">
                 <img
                   src={cat.image}
                   alt={cat.key}
                   className="w-full h-full object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
                 />
               </div>
-              <p className="text-sm font-semibold text-gray-700 leading-tight">
+              <p className="text-[11px] font-semibold text-slate-500 group-hover:text-[#1e3a5f] leading-tight transition-colors">
                 {t(cat.key) || cat.key}
               </p>
             </div>
           ))}
         </div>
-      </div>
 
-      <style>{`
-        @keyframes float {
-          0%, 100% { transform: translateY(0); }
-          50% { transform: translateY(-20px); }
-        }
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-      `}</style>
+      </div>
     </section>
   );
 }

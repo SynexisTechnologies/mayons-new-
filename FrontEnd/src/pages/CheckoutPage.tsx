@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Truck } from "lucide-react";
+import { ArrowLeft, Truck, CheckCircle, AlertCircle } from "lucide-react";
 import type { CartItem } from "../context/CartContext";
 import { placeOrder } from "../services/CheckoutServices";
 import { useLanguage } from "../context/LanguageContext";
@@ -47,6 +47,8 @@ export default function CheckoutPage({ items, onBack }: Props) {
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
+  const [orderStatus, setOrderStatus] = useState<"success" | "error" | null>(null);
+  const [orderMessage, setOrderMessage] = useState("");
 
 const handleChange = (
   e: React.ChangeEvent<
@@ -96,14 +98,36 @@ const handleSubmit = async (e: React.FormEvent) => {
     };
 
     await placeOrder(orderPayload);
-    alert(t("Order_Success"));
+    setOrderStatus("success");
+    setOrderMessage(t("Order_Success"));
   } catch (error: any) {
-    alert(error?.message || error?.response?.data?.message || "Order failed");
+    setOrderStatus("error");
+    setOrderMessage(error?.message || error?.response?.data?.message || "Order failed");
   }
 };
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-32 pb-10">
+    <div className="min-h-screen bg-slate-50 pt-36 pb-10">
+      {/* Order Status Modal */}
+      {orderStatus && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 w-[320px] text-center animate-scaleIn">
+            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${orderStatus === "success" ? "bg-green-100" : "bg-red-100"}`}>
+              {orderStatus === "success"
+                ? <CheckCircle className="w-8 h-8 text-green-500" />
+                : <AlertCircle className="w-8 h-8 text-red-500" />}
+            </div>
+            <h3 className={`text-xl font-bold mb-2 ${orderStatus === "success" ? "text-[#1e3a5f]" : "text-red-600"}`}>
+              {orderStatus === "success" ? "Order Placed!" : "Order Failed"}
+            </h3>
+            <p className="text-slate-500 text-sm mb-6">{orderMessage}</p>
+            <button onClick={() => setOrderStatus(null)}
+              className="w-full bg-[#1e3a5f] text-white py-2.5 rounded-xl font-semibold hover:bg-[#2a4a7c] transition">
+              OK
+            </button>
+          </div>
+        </div>
+      )}
       <div className="max-w-7xl mx-auto px-4">
 
         <button

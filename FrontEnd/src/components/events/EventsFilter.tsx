@@ -1,40 +1,26 @@
 import { useLanguage } from "../../context/LanguageContext";
 
-type Props = {
-  selected: string;
-  onChange: (value: string) => void;
-};
+type Props = { selected: string; onChange: (value: string) => void };
+
+const CATEGORIES = [
+  "categoriesAll", "categoriesFestival", "categoriesMarket",
+  "categoriesWorkshop", "categoriesTour", "categoriesFair",
+];
 
 export default function EventsFilter({ selected, onChange }: Props) {
   const { t } = useLanguage();
-
-  const categories = [
-    "categoriesAll",
-    "categoriesFestival",
-    "categoriesMarket",
-    "categoriesWorkshop",
-    "categoriesTour",
-    "categoriesFair",
-  ];
-
   return (
-    <div className="bg-white sm:p-6 mb-10">
-      <div className="flex flex-wrap justify-center gap-3">
-        {categories.map((key) => (
-          <button
-            key={key}
-            onClick={() => onChange(key)}
-            className={`px-4 sm:px-6 py-2 sm:py-3 rounded-full text-sm sm:text-base font-semibold transition
-              ${
-                selected === key
-                  ? "bg-[#1e3a5f] text-white"
-                  : "bg-gray-100 text-gray-700 hover:bg-[#d4af37]/20"
-              }`}
-          >
-            {t(key)}
-          </button>
-        ))}
-      </div>
+    <div className="flex flex-wrap justify-center gap-2 mb-10">
+      {CATEGORIES.map((key) => (
+        <button key={key} onClick={() => onChange(key)}
+          className={`px-5 py-2 rounded-full text-sm font-semibold transition cursor-pointer whitespace-nowrap ${
+            selected === key
+              ? "bg-[#1e3a5f] text-[#d4af37] shadow-md"
+              : "bg-white text-[#1e3a5f]/70 border border-slate-200 hover:border-[#1e3a5f]/40 hover:text-[#1e3a5f]"
+          }`}>
+          {t(key)}
+        </button>
+      ))}
     </div>
   );
 }

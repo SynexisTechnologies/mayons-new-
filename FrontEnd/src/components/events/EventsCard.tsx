@@ -1,12 +1,5 @@
-import {
-  Calendar,
-  MapPin,
-  Clock,
-  Users,
-  ArrowRight,
-  Tag,
-} from "lucide-react";
-import { useLanguage } from "../../context/LanguageContext"; // <--- import translation
+import { Calendar, MapPin, Clock, Users, ArrowRight, Tag } from "lucide-react";
+import { useLanguage } from "../../context/LanguageContext";
 
 type EventItem = {
   _id: string;
@@ -19,80 +12,78 @@ type EventItem = {
   description: string;
   price: string;
   capacity: number;
-  statusKey: string; // keep key
+  statusKey: string;
 };
 
-type EventCardProps = {
+type Props = {
   event: EventItem;
   onRegister?: () => void;
 };
 
-export default function EventCard({ event, onRegister }: EventCardProps) {
-  const { t } = useLanguage(); // <-- use translation hook
+export default function EventCard({ event, onRegister }: Props) {
+  const { t } = useLanguage();
 
   return (
-    <div className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_12px_#1e3a5f4d] hover:shadow-xl transition group">
-      <div className="relative h-56 overflow-hidden">
+    <div className="group bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 flex flex-col">
+
+      {/* Image */}
+      <div className="relative h-52 overflow-hidden">
         <img
           src={event.image}
           alt={event.title}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
 
-        {/* Status Tag */}
         {event.statusKey && (
-          <div className="absolute top-4 right-4 bg-[#d4af37] text-[#1e3a5f] px-3 py-1 rounded-full text-sm font-semibold">
+          <span className="absolute top-3 right-3 bg-[#d4af37] text-[#1e3a5f] text-[11px] font-extrabold px-2.5 py-1 rounded-full shadow">
             {t(event.statusKey)}
-          </div>
+          </span>
         )}
-
-        {/* Category Tag */}
         {event.categoryKey && (
-          <div className="absolute top-4 left-4 bg-[#1e3a5f] text-white px-3 py-1 rounded-full text-sm">
+          <span className="absolute top-3 left-3 bg-[#1e3a5f] text-white text-[11px] font-semibold px-2.5 py-1 rounded-full">
             {t(event.categoryKey)}
-          </div>
+          </span>
         )}
       </div>
 
-      <div className="p-6">
-        <h3 className="text-xl font-bold text-gray-800 mb-3">{event.title}</h3>
+      {/* Content */}
+      <div className="p-5 flex flex-col flex-1">
+        <h3 className="text-base font-bold text-[#1e3a5f] mb-3 leading-snug line-clamp-2">{event.title}</h3>
 
-        <div className="space-y-3 mb-4">
-          <div className="flex items-center gap-2 text-gray-700">
-            <Calendar className="w-5 h-5 text-[#1e3a5f]" />
-            <span className="text-sm">{event.date}</span>
+        <div className="space-y-1.5 text-sm text-slate-500 mb-3">
+          <div className="flex items-center gap-2">
+            <Calendar className="w-3.5 h-3.5 text-[#1e3a5f]/40 flex-shrink-0" />
+            <span>{event.date}</span>
           </div>
-
-          <div className="flex items-center gap-2 text-gray-700">
-            <Clock className="w-5 h-5 text-[#1e3a5f]" />
-            <span className="text-sm">{event.time}</span>
+          <div className="flex items-center gap-2">
+            <Clock className="w-3.5 h-3.5 text-[#1e3a5f]/40 flex-shrink-0" />
+            <span>{event.time}</span>
           </div>
-
-          <div className="flex items-center gap-2 text-gray-700">
-            <MapPin className="w-5 h-5 text-[#1e3a5f]" />
-            <span className="text-sm">{event.location}</span>
+          <div className="flex items-center gap-2">
+            <MapPin className="w-3.5 h-3.5 text-[#1e3a5f]/40 flex-shrink-0" />
+            <span className="line-clamp-1">{event.location}</span>
           </div>
-
-          <div className="flex items-center gap-2 text-gray-700">
-            <Users className="w-5 h-5 text-[#1e3a5f]" />
-            <span className="text-sm">{event.capacity} people</span>
+          <div className="flex items-center gap-2">
+            <Users className="w-3.5 h-3.5 text-[#1e3a5f]/40 flex-shrink-0" />
+            <span>{event.capacity} seats</span>
           </div>
         </div>
 
-        <p className="text-sm text-gray-600 mb-4">{event.description}</p>
+        {event.description && (
+          <p className="text-xs text-slate-400 line-clamp-2 mb-4 leading-relaxed">{event.description}</p>
+        )}
 
-        <div className="flex items-center justify-between pt-4 border-t">
-          <div className="flex items-center gap-1 text-[#1e3a5f]">
-            <Tag className="w-4 h-4" />
-            <span className="font-bold">{event.price}</span>
+        <div className="flex items-center justify-between pt-4 border-t border-slate-100 mt-auto">
+          <div className="flex items-center gap-1.5 text-[#1e3a5f]">
+            <Tag className="w-3.5 h-3.5" />
+            <span className="font-extrabold text-sm">{event.price}</span>
           </div>
-
           <button
             onClick={onRegister}
-            className="bg-[#1e3a5f] text-white px-5 py-2 rounded-lg flex items-center gap-2 hover:bg-[#2a4a7c]"
+            className="flex items-center gap-1.5 bg-[#1e3a5f] text-white text-sm font-semibold px-4 py-2 rounded-xl hover:bg-[#2a4a7c] transition shadow-sm cursor-pointer"
           >
-            {t("register")}
-            <ArrowRight size={16} />
+            {t("register")} <ArrowRight className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>

@@ -24,10 +24,10 @@ export default function OrganicProductHero() {
 </div></div>
         {/* Content */}
         <div className="space-y-6">
-          <div className="flex items-center gap-2 text-green-700 text-sm font-semibold tracking-wider">
-            <span className="w-2 h-2 bg-green-600 rounded-full" />
-            <span className="w-2 h-2 bg-green-600 rounded-full" />
-            <span className="w-2 h-2 bg-green-600 rounded-full" />
+          <div className="flex items-center gap-2 text-[#1e3a5f] text-sm font-semibold tracking-wider">
+            <span className="w-2 h-2 bg-[#d4af37] rounded-full" />
+            <span className="w-2 h-2 bg-[#d4af37] rounded-full" />
+            <span className="w-2 h-2 bg-[#d4af37] rounded-full" />
             <span>{t("productBadge")}</span>
           </div>
 
@@ -35,7 +35,7 @@ export default function OrganicProductHero() {
             {t("productHeroTitle")}
           </h1>
 
-          <div className="border-l-4 border-green-600 pl-6">
+          <div className="border-l-4 border-[#d4af37] pl-6">
             <p className="text-base sm:text-lg text-gray-600 italic">
               {t("productHeroQuote")}
             </p>

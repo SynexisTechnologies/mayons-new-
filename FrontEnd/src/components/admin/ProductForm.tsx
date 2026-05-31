@@ -40,6 +40,8 @@ export default function ProductForm({
 
   const [form, setForm] = useState<Partial<Product>>(initialState);
   const [categories, setCategories] = useState<string[]>([]);
+  const [formError, setFormError] = useState("");
+  const [formSuccess, setFormSuccess] = useState("");
 
 
 useEffect(() => {
@@ -110,24 +112,25 @@ useEffect(() => {
     };
 
     if (!payload.pluNumber || !payload.nameEn || !payload.category || payload.oldPrice === undefined || payload.newPrice === undefined) {
-      alert("Please fill all required fields.");
+      setFormError("Please fill all required fields.");
       return;
     }
 
+    setFormError("");
     if (editingProduct) {
       await productService.update(editingProduct._id!, payload);
       setEditingProduct(null);
     } else {
       await productService.create(payload);
-      alert("Product created successfully!");
+      setFormSuccess("Product created successfully!");
     }
 
     setForm(initialState);
     fetchProducts();
-    onClose();
+    setTimeout(onClose, 600);
   } catch (err: any) {
     console.error("Failed to save product:", err);
-    alert(err.response?.data?.message || "Failed to save product");
+    setFormError(err.response?.data?.message || "Failed to save product");
   }
  };
 
@@ -408,6 +411,8 @@ useEffect(() => {
           </div>
 
           {/* FOOTER */}
+          {formError && <p className="text-red-500 text-sm bg-red-50 px-4 py-2.5 rounded-xl border border-red-100">{formError}</p>}
+          {formSuccess && <p className="text-green-600 text-sm bg-green-50 px-4 py-2.5 rounded-xl border border-green-100">{formSuccess}</p>}
           <div className="flex justify-end gap-4 pt-6 border-t">
             <button
               type="button"

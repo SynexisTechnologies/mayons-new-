@@ -1,4 +1,4 @@
-import { X, Minus, Plus, ShoppingCart } from "lucide-react";
+import { X, Minus, Plus, ShoppingCart, Star } from "lucide-react";
 import { useState } from "react";
 import { Product } from "./types";
 import { useCart } from "../../context/CartContext";
@@ -9,24 +9,25 @@ export default function ProductDetailsModal({ product, onClose }: { product: Pro
   const { t, getProductName, getProductDescription } = useLanguage();
   const [qty, setQty] = useState(1);
   const [size, setSize] = useState<string>(product.sizes?.[0] || "");
+  const [color, setColor] = useState<string>(product.colors?.[0] || "");
   const [sizeError, setSizeError] = useState("");
-  const [selectedColor, setSelectedColor] = useState<string>(product.colors?.[0] || "");
 
-  const handleAddToCart = () => {
-    if (product.sizes && !size) {
-      setSizeError(t("select_size_error"));
-      return;
-    }
+  const hasDiscount = !!product.discount && product.discount > 0;
+  const displayPrice = hasDiscount ? product.newPrice : product.price;
+  const rating = Math.round(product.rating ?? 0);
+
+  const handleAdd = () => {
+    if (product.sizes?.length && !size) { setSizeError(t("select_size_error")); return; }
     addToCart({
-      id: product._id || product.pluNumber, // <-- FIXED TYPE ISSUE
+      id: product._id || product.pluNumber,
       pluNumber: product.pluNumber ?? "",
       nameKey: getProductName(product),
       image: product.image,
-      price: product.newPrice ?? 0,
+      price: product.newPrice ?? product.price ?? 0,
       quantity: qty,
       unit: product.unit,
       size: size || undefined,
-      color: selectedColor || undefined,
+      color: color || undefined,
       userRating: 0,
     });
     onClose();
@@ -34,47 +35,99 @@ export default function ProductDetailsModal({ product, onClose }: { product: Pro
 
   return (
     <>
-      <div className="fixed inset-0 bg-black/50 z-40" onClick={onClose} />
-      <div className="fixed inset-0 z-50 flex justify-center items-center p-4">
-        <div className="bg-white w-full max-w-5xl rounded-xl p-6 relative shadow-[0_6px_20px_#1e3a5f4d]">
-          <button onClick={onClose} className="absolute right-4 top-4 text-[#1e3a5f]"><X /></button>
-          <div className="grid md:grid-cols-2 gap-8">
-            <img src={product.image} className="w-full h-[420px] object-cover rounded-lg" />
-            <div>
-              <h2 className="text-2xl font-bold text-[#1e3a5f]">{getProductName(product)}</h2>
-              <p className="text-gray-500 mt-1">⭐ {product.rating ?? 0} ({product.reviews ?? 0} reviews)</p>
-              <p className="text-3xl text-[#d4af37] font-bold mt-4">
-                {t("Rs")} {product.newPrice}
-                {product.oldPrice && <span className="line-through text-gray-400 text-lg ml-3">{t("Rs")} {product.oldPrice}</span>}
-              </p>
-              <p className="mt-4 text-gray-600">{getProductDescription(product)}</p>
+      <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40" onClick={onClose} />
+      <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+        <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden max-h-[90vh] flex flex-col">
 
-              {product.sizes && (
-                <div className="mt-6">
-                  <h4 className="font-semibold mb-2 text-[#1e3a5f]">{t("select_size")}</h4>
-                  <div className="flex gap-2">
+          {/* Header */}
+          <div className="flex items-center justify-between px-6 py-4 border-b bg-[#1e3a5f] text-white flex-shrink-0">
+            <p className="font-extrabold text-sm">Product Details</p>
+            <button onClick={onClose} className="w-8 h-8 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center transition cursor-pointer">
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Body */}
+          <div className="grid md:grid-cols-2 gap-0 overflow-y-auto">
+            {/* Image */}
+            <div className="relative aspect-square bg-slate-50">
+              <img src={product.image} alt={getProductName(product)} className="w-full h-full object-cover" />
+              {hasDiscount && (
+                <span className="absolute top-4 left-4 bg-[#d4af37] text-[#1e3a5f] text-xs font-extrabold px-2.5 py-1 rounded-full">
+                  -{product.discount}%
+                </span>
+              )}
+            </div>
+
+            {/* Info */}
+            <div className="p-7 flex flex-col gap-4">
+              <div>
+                <h2 className="text-xl font-extrabold text-[#1e3a5f] mb-1">{getProductName(product)}</h2>
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`w-3.5 h-3.5 ${i < rating ? "text-[#d4af37] fill-[#d4af37]" : "text-slate-200 fill-slate-200"}`} />
+                    ))}
+                  </div>
+                  <span className="text-xs text-slate-400">({product.reviews ?? 0} reviews)</span>
+                </div>
+              </div>
+
+              <div className="flex items-baseline gap-3">
+                <span className="text-2xl font-extrabold text-[#1e3a5f]">{t("Rs")} {displayPrice?.toFixed(2)}</span>
+                {hasDiscount && product.oldPrice && (
+                  <span className="text-sm text-slate-400 line-through">{t("Rs")} {product.oldPrice.toFixed(2)}</span>
+                )}
+              </div>
+
+              {product.descriptionEn && (
+                <p className="text-slate-500 text-sm leading-relaxed">{getProductDescription(product)}</p>
+              )}
+
+              {/* Sizes */}
+              {product.sizes && product.sizes.length > 0 && (
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">{t("size")}</label>
+                  <div className="flex flex-wrap gap-2">
                     {product.sizes.map(s => (
                       <button key={s} onClick={() => { setSize(s); setSizeError(""); }}
-                        className={`px-4 py-2 border rounded-lg font-medium transition ${size === s ? "bg-[#d4af37] text-[#1e3a5f] border-[#d4af37]" : "border-gray-300 hover:border-[#d4af37]"}`}>
+                        className={`px-3 py-1.5 text-xs font-semibold rounded-lg border transition cursor-pointer ${size === s ? "bg-[#1e3a5f] text-white border-[#1e3a5f]" : "border-slate-200 text-slate-600 hover:border-[#1e3a5f]/40"}`}>
                         {s}
                       </button>
                     ))}
                   </div>
-                  {sizeError && <p className="text-red-600 text-sm mt-2">{sizeError}</p>}
+                  {sizeError && <p className="text-red-500 text-xs mt-1">{sizeError}</p>}
                 </div>
               )}
 
-              <div className="mt-6 flex items-center gap-4">
-                <button onClick={() => setQty(Math.max(1, qty - 1))} className="border rounded p-2"><Minus /></button>
-                <span className="font-semibold">{qty}</span>
-                <button onClick={() => setQty(qty + 1)} className="border rounded p-2"><Plus /></button>
+              {/* Colors */}
+              {product.colors && product.colors.length > 0 && (
+                <div>
+                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">{t("color")}</label>
+                  <div className="flex gap-2">
+                    {product.colors.map(c => (
+                      <button key={c} onClick={() => setColor(c)} title={c}
+                        className={`w-6 h-6 rounded-full border-2 transition cursor-pointer ${color === c ? "border-[#1e3a5f] scale-125" : "border-transparent"}`}
+                        style={{ backgroundColor: c.toLowerCase() }} />
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Qty */}
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2 block">Quantity</label>
+                <div className="flex items-center gap-3 border border-slate-200 rounded-xl w-fit px-3 py-2">
+                  <button onClick={() => setQty(Math.max(1, qty - 1))} className="text-slate-500 hover:text-[#1e3a5f] transition cursor-pointer"><Minus className="w-4 h-4" /></button>
+                  <span className="font-bold text-[#1e3a5f] w-6 text-center">{qty}</span>
+                  <button onClick={() => setQty(qty + 1)} className="text-slate-500 hover:text-[#1e3a5f] transition cursor-pointer"><Plus className="w-4 h-4" /></button>
+                </div>
               </div>
 
-              <div className="mt-8">
-                <button onClick={handleAddToCart} className="mt-2 w-full bg-[#1e3a5f] text-white px-4 py-2 rounded-lg hover:bg-[#2a4a7c] transition flex justify-center items-center gap-2 font-semibold shadow">
-                  <ShoppingCart className="w-4 h-4" /> {t("add_to_cart")}
-                </button>
-              </div>
+              <button onClick={handleAdd}
+                className="mt-auto w-full bg-[#1e3a5f] text-white py-3.5 rounded-xl font-bold flex justify-center items-center gap-2 hover:bg-[#2a4a7c] transition shadow-sm cursor-pointer">
+                <ShoppingCart className="w-4 h-4" /> {t("add_to_cart")}
+              </button>
             </div>
           </div>
         </div>

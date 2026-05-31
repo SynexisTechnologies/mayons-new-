@@ -1,14 +1,16 @@
-@import "tailwindcss";
-
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
-
+@import "tailwindcss";
 
 :root {
   font-family: 'Inter', sans-serif;
   line-height: 1.5;
   font-weight: 400;
-
+  --nav-h: 72px;       /* top bar only (mobile) */
+  --nav-h-md: 116px;   /* top + bottom bar (desktop) */
 }
+
+/* Ensure all buttons show pointer cursor */
+button, [role="button"], [onClick] { cursor: pointer; }
 
 /* Hide scrollbar completely */
 .scrollbar-hide::-webkit-scrollbar {

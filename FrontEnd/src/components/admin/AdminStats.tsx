@@ -102,21 +102,21 @@ export default function AdminStats() {
 
 function Card({ title, value, icon }: any) {
   return (
-    <div className="bg-white p-5 rounded-xl shadow-[0_4px_12px_#1e3a5f4d] flex justify-between items-center">
+    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between hover:shadow-md transition">
       <div>
-        <p className="text-[#2a4a7c] text-sm">{title}</p>
-        <h2 className="text-2xl font-bold text-[#1e3a5f]">{value}</h2>
+        <p className="text-slate-400 text-xs font-semibold uppercase tracking-wide mb-1">{title}</p>
+        <h2 className="text-2xl font-extrabold text-[#1e3a5f]">{value}</h2>
       </div>
-      <div className="text-[#d4af37]">{icon}</div>
+      <div className="w-11 h-11 rounded-xl bg-[#1e3a5f]/8 flex items-center justify-center text-[#d4af37]">{icon}</div>
     </div>
   );
 }
 
 function SalesCard({ label, value }: any) {
   return (
-    <div className="bg-gradient-to-br from-[#1e3a5f] to-[#2a4a7c] text-white p-4 rounded-xl shadow-[0_4px_12px_#1e3a5f4d]">
-      <p className="text-sm opacity-80">{label} Sales</p>
-      <h2 className="text-xl font-bold mt-1 text-[#d4af37]">Rs {value || 0}</h2>
+    <div className="bg-[#1e3a5f] text-white p-5 rounded-2xl shadow-sm hover:shadow-md transition">
+      <p className="text-white/50 text-xs font-semibold uppercase tracking-wide mb-1">{label} Sales</p>
+      <h2 className="text-xl font-extrabold text-[#d4af37]">Rs {value || 0}</h2>
     </div>
   );
 }

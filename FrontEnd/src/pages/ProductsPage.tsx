@@ -6,7 +6,7 @@ import { Product } from "../components/product/types";
 import { productService } from "../services/ProductServices";
 import { megaCategories } from "../data/categories";
 import { useLanguage } from "../context/LanguageContext";
-import { SlidersHorizontal, ChevronDown, SearchX, Heart } from "lucide-react";
+import { SlidersHorizontal, ChevronDown, SearchX, Heart, ChevronRight } from "lucide-react";
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 
@@ -175,6 +175,21 @@ export default function ProductPage() {
     [category]
   );
 
+  // Sub-category pills: first-level items of the selected main category
+  const subCategoryPills = useMemo(() => {
+    if (!selectedMainCategory) return [];
+    return (selectedMainCategory.items || []).map((item) => ({
+      key: (typeof item === "string" ? item : item.titleKey).toLowerCase(),
+      label: typeof item === "string" ? item : item.titleKey,
+    }));
+  }, [selectedMainCategory]);
+
+  // Whether the current category is a sub-category (not main, not all)
+  const activeSubKey = useMemo(() => {
+    if (category === "all" || mainCategories.some((c) => c.key === category)) return null;
+    return category;
+  }, [category, mainCategories]);
+
   const groupedProducts = useMemo(() => {
     if (!selectedMainCategory) return null;
     const groups: Record<string, Product[]> = {};
@@ -199,60 +214,104 @@ export default function ProductPage() {
   return (
     <main className="min-h-screen bg-slate-50">
       {/* ── HERO ── */}
-      <section className="relative h-56 sm:h-72 overflow-hidden">
-        <img
-          src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1920&q=80"
-          className="w-full h-full object-cover scale-105"
-          alt="Products"
-        />
-        <div className="absolute inset-0 bg-gradient-to-r from-[#1e3a5f]/90 via-[#1e3a5f]/60 to-[#1e3a5f]/10" />
-        <div className="absolute inset-0 flex flex-col items-center justify-center text-white text-center px-4">
-          <span className="inline-block text-[#d4af37] text-xs font-bold tracking-[0.3em] uppercase mb-3 opacity-90">
+      <section className="relative overflow-hidden min-h-[500px] md:min-h-[560px]">
+        <div className="absolute inset-0">
+          <img
+            src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1920&q=80"
+            className="w-full h-full object-cover scale-105"
+            alt="Products"
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#1e3a5f]/90 via-[#1e3a5f]/60 to-[#1e3a5f]/10" />
+        </div>
+        <div className="relative z-10 min-h-[500px] md:min-h-[560px] flex flex-col items-center justify-center text-white text-center px-4 pt-[80px] md:pt-[130px] pb-14">
+          <div className="inline-flex items-center gap-2 bg-[#d4af37]/20 border border-[#d4af37]/40 text-[#d4af37] px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-4">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
             Our Collection
-          </span>
-          <h1 className="text-3xl sm:text-5xl font-extrabold mb-2 tracking-tight drop-shadow">
+          </div>
+          <h1 className="text-3xl sm:text-5xl font-extrabold mb-3 tracking-tight drop-shadow">
             {t("allProducts")}
           </h1>
-          <p className="text-white/65 text-sm sm:text-base">{t("browse")}</p>
+          <p className="text-white/70 text-sm sm:text-base max-w-md mb-6">{t("browse")}</p>
+          <button
+            onClick={() => document.getElementById("products-grid")?.scrollIntoView({ behavior: "smooth" })}
+            className="px-7 py-2.5 bg-[#d4af37] text-[#1e3a5f] rounded-full text-sm font-bold hover:bg-[#e0c040] transition shadow-lg cursor-pointer"
+          >
+            {t("explore_products")}
+          </button>
         </div>
       </section>
 
       {/* ── STICKY FILTER BAR ── */}
       <div className="sticky top-[72px] md:top-[116px] z-20 bg-white/95 backdrop-blur-lg border-b border-gray-100 shadow-sm">
         <div className="max-w-7xl mx-auto px-4">
-          <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-3">
-            {mainCategories.map((cat) => {
-              const active = activeCategoryKey === cat.key;
-              return (
-                <button
-                  key={cat.key}
-                  onClick={() => handleCategorySelect(cat.key)}
-                  className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200
-                    ${active
-                      ? "bg-[#1e3a5f] text-[#d4af37] shadow-md"
-                      : "bg-slate-100 text-[#1e3a5f]/70 hover:bg-[#1e3a5f]/10 hover:text-[#1e3a5f]"
-                    }`}
-                >
-                  {cat.key === "all" ? t("all") : t(cat.label)}
-                </button>
-              );
-            })}
-
-            <div className="w-px h-5 bg-gray-200 flex-shrink-0 mx-1" />
-
-            <button
-              onClick={() => navigate("/favorites")}
-              className="flex-shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-rose-50 text-rose-600 hover:bg-rose-100 transition border border-rose-100"
-            >
-              <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
-              {t("favorites")}
-              {favorites.length > 0 && (
-                <span className="bg-rose-500 text-white rounded-full px-1.5 py-0.5 text-[10px] leading-none">
-                  {favorites.length}
-                </span>
-              )}
-            </button>
+          {/* Main category row */}
+          <div className="relative">
+            <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-3 pr-10">
+              {mainCategories.map((cat) => {
+                const active = activeCategoryKey === cat.key;
+                return (
+                  <button
+                    key={cat.key}
+                    onClick={() => handleCategorySelect(cat.key)}
+                    className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200
+                      ${active
+                        ? "bg-[#1e3a5f] text-[#d4af37] shadow-md"
+                        : "bg-slate-100 text-[#1e3a5f]/70 hover:bg-[#1e3a5f]/10 hover:text-[#1e3a5f]"
+                      }`}
+                  >
+                    {cat.key === "all" ? t("all") : t(cat.label)}
+                  </button>
+                );
+              })}
+              <div className="w-px h-5 bg-gray-200 flex-shrink-0 mx-1" />
+              <button
+                onClick={() => navigate("/favorites")}
+                className="flex-shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-rose-50 text-rose-600 hover:bg-rose-100 transition border border-rose-100"
+              >
+                <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
+                {t("favorites")}
+                {favorites.length > 0 && (
+                  <span className="bg-rose-500 text-white rounded-full px-1.5 py-0.5 text-[10px] leading-none">
+                    {favorites.length}
+                  </span>
+                )}
+              </button>
+            </div>
+            {/* Scroll indicator */}
+            <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-white to-transparent pointer-events-none flex items-center justify-end pr-1.5">
+              <ChevronRight className="w-4 h-4 text-slate-300" />
+            </div>
           </div>
+
+          {/* Sub-category row — only when main category is active */}
+          {subCategoryPills.length > 0 && (
+            <div className="relative border-t border-slate-100">
+              <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-2 pr-10">
+                <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-widest text-slate-400 mr-1">
+                  Refine:
+                </span>
+                {subCategoryPills.map((sub) => {
+                  const active = activeSubKey === sub.key;
+                  return (
+                    <button
+                      key={sub.key}
+                      onClick={() => handleCategorySelect(sub.key)}
+                      className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap transition-all duration-200
+                        ${active
+                          ? "bg-[#d4af37] text-[#1e3a5f] shadow-sm"
+                          : "bg-slate-50 text-slate-500 border border-slate-200 hover:border-[#d4af37]/50 hover:text-[#1e3a5f]"
+                        }`}
+                    >
+                      {t(sub.label)}
+                    </button>
+                  );
+                })}
+              </div>
+              <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-white to-transparent pointer-events-none flex items-center justify-end pr-1.5">
+                <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+              </div>
+            </div>
+          )}
         </div>
       </div>
 

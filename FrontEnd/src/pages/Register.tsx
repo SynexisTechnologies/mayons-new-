@@ -1,417 +1,231 @@
-import { ArrowLeft, Leaf, User, ShoppingCart, Search } from "lucide-react";
+import { ArrowLeft, Leaf, Eye, EyeOff, CheckCircle } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { register, verifyOtp } from "../api/AuthService";
 import { useLanguage } from "../context/LanguageContext";
-import { useCart } from "../context/CartContext";
+
+interface RegisterForm {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phone: string;
+  password: string;
+  confirmPassword: string;
+  otp: string;
+}
 
 export default function Register() {
   const navigate = useNavigate();
-  const { t, language, setLanguage } = useLanguage();
-  const { items } = useCart();
+  const { t } = useLanguage();
 
   const [step, setStep] = useState<"FORM" | "OTP">("FORM");
-  const [email, setEmail] = useState("");
-  interface RegisterForm {
-    firstName: string;
-    lastName: string;
-    email: string;
-    phone: string;
-    password: string;
-    confirmPassword: string;
-    otp: string;
-  }
-
   const [form, setForm] = useState<RegisterForm>({
-    firstName: "",
-    lastName: "",
-    email: "",
-    phone: "",
-    password: "",
-    confirmPassword: "",
-    otp: "",
+    firstName: "", lastName: "", email: "", phone: "", password: "", confirmPassword: "", otp: "",
   });
-
+  const [showPw, setShowPw] = useState(false);
+  const [showConfirmPw, setShowConfirmPw] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [modal, setModal] = useState<{
-  type: "success" | "error" | null;
-  message: string;
-}>({
-  type: null,
-  message: "",
-});
-  useEffect(() => {
-    const handleScroll = () => setIsScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  const [loading, setLoading] = useState(false);
+  const [showSuccessModal, setShowSuccessModal] = useState(false);
 
-  /* ---------------- VALIDATIONS ---------------- */
-
-  const validateEmail = (value: string) => {
-    const emailRegex = /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/;
-    return emailRegex.test(value);
-  };
-
-  const validatePassword = (password: string) =>
-    /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(password);
-
-  const validatePhone = (phone: string) => {
-    if (!phone.startsWith("+94")) return t("phoneStart");
-    const digits = phone.replace("+94", "");
-    if (!/^\d+$/.test(digits)) return t("phoneDigits");
-    if (digits.length !== 9) return t("phoneLength");
+  const validateEmail = (v: string) => /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(v);
+  const validatePassword = (p: string) => /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(p);
+  const validatePhone = (p: string) => {
+    if (!p.startsWith("+94")) return t("phoneStart");
+    if (!/^\d+$/.test(p.slice(3))) return t("phoneDigits");
+    if (p.slice(3).length !== 9) return t("phoneLength");
     return "";
   };
 
-  /* ---------------- HANDLERS ---------------- */
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const name = e.target.name as keyof RegisterForm;
-    const value = e.target.value;
-    setForm((prev) => ({ ...prev, [name]: value }));
+    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
   };
 
-const handleSendOTP = async () => {
-  setError("");
-  setSuccess("");
-
-  // Required field check
-  if (
-    !form.firstName ||
-    !form.lastName ||
-    !form.email ||
-    !form.phone ||
-    !form.password ||
-    !form.confirmPassword
-  ) {
-    setError(t("Please fill all fields"));
-    return;
-  }
-
-  // Email validation
-  if (!validateEmail(form.email)) {
-    setError(t("Invalid email address"));
-    return;
-  }
-
-  // Password validation
-  if (!validatePassword(form.password)) {
-    setError(t("passwordRules"));
-    return;
-  }
-
-  // Confirm password check
-  if (form.password !== form.confirmPassword) {
-    setError(t("passwordMismatch"));
-    return;
-  }
-
-  // Phone validation
-  const phoneError = validatePhone(form.phone);
-  if (phoneError) {
-    setError(phoneError);
-    return;
-  }
-
-  try {
-    await register({
-      firstName: form.firstName,
-      lastName: form.lastName,
-      email: form.email,
-      mobile: form.phone,
-      password: form.password,
-      role: "user",
-    });
-
-    setStep("OTP");
-    setSuccess(t("otpSent"));
-  } catch (err: any) {
-    setError(err.response?.data?.message || "Signup failed");
-  }
-};
+  const handleSendOTP = async () => {
+    setError(""); setSuccess("");
+    if (!form.firstName || !form.lastName || !form.email || !form.phone || !form.password || !form.confirmPassword) {
+      setError(t("Please fill all fields")); return;
+    }
+    if (!validateEmail(form.email)) { setError(t("Invalid email address")); return; }
+    if (!validatePassword(form.password)) { setError(t("passwordRules")); return; }
+    if (form.password !== form.confirmPassword) { setError(t("passwordMismatch")); return; }
+    const phoneError = validatePhone(form.phone);
+    if (phoneError) { setError(phoneError); return; }
+    setLoading(true);
+    try {
+      await register({ firstName: form.firstName, lastName: form.lastName, email: form.email, mobile: form.phone, password: form.password, role: "user" });
+      setStep("OTP");
+      setSuccess(t("otpSent"));
+    } catch (err: any) {
+      setError(err.response?.data?.message || "Signup failed");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleVerifyAndRegister = async () => {
+    setLoading(true);
     try {
       await verifyOtp({ email: form.email, otp: form.otp });
-      setModal({
-      type: "success",
-        message: t("registerSuccess"),
-    });
-setError("");
-setTimeout(() => {
-  navigate("/login");
-}, 1500);
+      setShowSuccessModal(true);
+      setTimeout(() => navigate("/login"), 2000);
     } catch (err: any) {
       setError(err.response?.data?.message || "OTP verification failed");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
-    <div className="min-h-screen grid md:grid-cols-[2fr_3fr] bg-white">
+    <div className="min-h-screen grid md:grid-cols-[1fr_1fr] bg-slate-50">
 
-      {/* ================= TOP BAR ================= */}
-      <div
-        className={`w-full flex items-center justify-between px-4 py-3 fixed top-0 z-50 transition-shadow ${
-          isScrolled ? "shadow-lg" : ""
-        }`}
-        style={{ backgroundColor: "#1e3a5f", boxShadow: isScrolled ? "0 4px 12px #1e3a5f4d" : "none" }}
-      >
-        <div className="flex items-center gap-2 text-white">
-          <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-            <Leaf className="text-[#1e3a5f]" />
+      {/* LEFT — form */}
+      <div className="flex flex-col justify-center px-8 sm:px-14 py-12 bg-white overflow-y-auto">
+        {/* Logo */}
+        <div className="flex items-center gap-2 mb-8">
+          <div className="w-9 h-9 bg-[#1e3a5f] rounded-full flex items-center justify-center">
+            <Leaf className="w-5 h-5 text-[#d4af37]" />
           </div>
           <div>
-            <h1 className="font-bold text-lg">Organi</h1>
-            <p className="text-xs tracking-widest">FRESH PRODUCT</p>
+            <p className="font-bold text-[#1e3a5f] leading-none text-sm">Organi</p>
+            <p className="text-[9px] tracking-widest text-slate-400">FRESH PRODUCT</p>
           </div>
         </div>
 
-        <div className="hidden md:flex flex-1 mx-6 relative">
-          <input
-            placeholder={t("search")}
-            className="w-full rounded-full px-5 py-2 outline-none bg-white/20 text-white placeholder-white"
-          />
-          <Search className="absolute right-4 top-2.5 text-white w-5" />
-        </div>
-
-        {/* Language */}
-        <select
-          value={language}
-          onChange={(e) => setLanguage(e.target.value as "en" | "si")}
-          className="bg-transparent border border-white text-white rounded px-2 py-1 mr-4"
-        >
-          <option value="en" className="text-black">EN</option>
-          <option value="si" className="text-black">සිං</option>
-        </select>
-
-        {/* Cart & User buttons */}
-        <div className="flex items-center gap-4">
-          <button
-            onClick={() => alert("User clicked")}
-            className="text-white"
-          >
-            <User />
-          </button>
-
-          <button
-            className="relative text-white"
-            onClick={() => alert("Cart clicked")}
-          >
-            <ShoppingCart />
-            {items.length > 0 && (
-              <span className="absolute -top-2 -right-2 bg-[#d4af37] text-xs w-5 h-5 rounded-full flex items-center justify-center">
-                {items.length}
-              </span>
-            )}
-          </button>
-        </div>
-      </div>
-
-      {/* LEFT SIDE – SCROLLABLE */}
-      <div className="flex flex-col justify-center px-10 sm:px-16 pt-24">
-        <button
-          onClick={() => navigate(-1)}
-          className="flex items-center gap-2 text-sm text-gray-600 hover:text-[#2a4a7c] mb-4 w-fit"
-        >
-          <ArrowLeft size={18} />
+        <button onClick={() => navigate(-1)} className="flex items-center gap-1 text-sm text-slate-500 hover:text-[#1e3a5f] mb-5 w-fit transition">
+          <ArrowLeft size={16} /> Back
         </button>
-        <h1 className="text-3xl font-bold mb-1">{t("registerTitle")}</h1>
-        <p className="text-gray-700 mb-8">{t("registerSub")}</p>
 
-        {error && <p className="text-red-600 text-sm mb-4">{error}</p>}
-        {success && <p className="text-green-600 text-sm mb-4">{success}</p>}
+        <h1 className="text-2xl font-bold text-[#1e3a5f] mb-1">{t("registerTitle")}</h1>
+        <p className="text-sm text-slate-500 mb-6">{t("registerSub")}</p>
 
-        {/* FORM STEP */}
+        {error && <p className="text-red-500 text-xs bg-red-50 px-3 py-2 rounded-lg mb-4">{error}</p>}
+        {success && <p className="text-green-600 text-xs bg-green-50 px-3 py-2 rounded-lg mb-4">{success}</p>}
+
         {step === "FORM" && (
-          <>
-            <div className="grid grid-cols-2 gap-4 max-w-sm mb-4">
+          <div className="space-y-4 max-w-sm">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-sm font-medium">{t("firstName")} :</label>
-                <input
-                  name="firstName"
-                  value={form.firstName}
-                  onChange={handleChange}
-                  className="w-full border rounded-md px-4 py-2 mt-1 focus:ring-2 focus:ring-[#d4af37] outline-none"
-                />
+                <label className="block text-xs font-semibold text-slate-600 mb-1 uppercase tracking-wide">{t("firstName")}</label>
+                <input name="firstName" value={form.firstName} onChange={handleChange}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#1e3a5f]/20 focus:border-[#1e3a5f] outline-none transition" />
               </div>
-
               <div>
-                <label className="text-sm font-medium">{t("lastName")} :</label>
-                <input
-                  name="lastName"
-                  value={form.lastName}
-                  onChange={handleChange}
-                  className="w-full border rounded-md px-4 py-2 mt-1 focus:ring-2 focus:ring-[#d4af37] outline-none"
-                />
+                <label className="block text-xs font-semibold text-slate-600 mb-1 uppercase tracking-wide">{t("lastName")}</label>
+                <input name="lastName" value={form.lastName} onChange={handleChange}
+                  className="w-full border border-slate-200 rounded-xl px-3 py-2.5 text-sm focus:ring-2 focus:ring-[#1e3a5f]/20 focus:border-[#1e3a5f] outline-none transition" />
               </div>
             </div>
 
-            <div className="max-w-sm mb-3">
-              <label className="text-sm font-medium">{t("emailAddress")} :</label>
-              <input
-                name="email"
-                value={form.email}
-                onChange={handleChange}
-                className="w-full border rounded-md px-4 py-2 mt-1 focus:ring-2 focus:ring-[#d4af37] outline-none"
-              />
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1 uppercase tracking-wide">{t("emailAddress")}</label>
+              <input name="email" value={form.email} onChange={handleChange} placeholder="you@example.com"
+                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#1e3a5f]/20 focus:border-[#1e3a5f] outline-none transition" />
             </div>
 
-            <div className="max-w-sm mb-3">
-              <label className="text-sm font-medium">{t("phoneNumber")} :</label>
-              <input
-                name="phone"
-                value={form.phone}
-                placeholder="+94XXXXXXXXX"
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1 uppercase tracking-wide">{t("phoneNumber")}</label>
+              <input name="phone" value={form.phone} placeholder="+94XXXXXXXXX"
                 onChange={(e) => {
-                  let value = e.target.value;
-                  if (!value.startsWith("+94")) value = "+94";
-                  const digits = value.slice(3).replace(/\D/g, "");
-                  value = "+94" + digits.slice(0, 9);
-                  setForm({ ...form, phone: value });
+                  let v = e.target.value;
+                  if (!v.startsWith("+94")) v = "+94";
+                  v = "+94" + v.slice(3).replace(/\D/g, "").slice(0, 9);
+                  setForm({ ...form, phone: v });
                 }}
-                className="w-full border rounded-md px-4 py-2 mt-1 focus:ring-2 focus:ring-[#d4af37] outline-none"
-              />
+                className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-[#1e3a5f]/20 focus:border-[#1e3a5f] outline-none transition" />
             </div>
 
-            <div className="max-w-sm mb-3">
-              <label className="text-sm font-medium">{t("password")} :</label>
-              <input
-                type="password"
-                name="password"
-                value={form.password}
-                onChange={handleChange}
-                className="w-full border rounded-md px-4 py-2 mt-1 focus:ring-2 focus:ring-[#d4af37] outline-none"
-              />
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1 uppercase tracking-wide">{t("password")}</label>
+              <div className="relative">
+                <input type={showPw ? "text" : "password"} name="password" value={form.password} onChange={handleChange} placeholder="••••••••"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm pr-10 focus:ring-2 focus:ring-[#1e3a5f]/20 focus:border-[#1e3a5f] outline-none transition" />
+                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+                  {showPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
 
-            <div className="max-w-sm mb-5">
-              <label className="text-sm font-medium">{t("confirmPassword")} :</label>
-              <input
-                type="password"
-                name="confirmPassword"
-                value={form.confirmPassword}
-                onChange={handleChange}
-                className="w-full border rounded-md px-4 py-2 mt-1 focus:ring-2 focus:ring-[#d4af37] outline-none"
-              />
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1 uppercase tracking-wide">{t("confirmPassword")}</label>
+              <div className="relative">
+                <input type={showConfirmPw ? "text" : "password"} name="confirmPassword" value={form.confirmPassword} onChange={handleChange} placeholder="••••••••"
+                  className="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-sm pr-10 focus:ring-2 focus:ring-[#1e3a5f]/20 focus:border-[#1e3a5f] outline-none transition" />
+                <button type="button" onClick={() => setShowConfirmPw(!showConfirmPw)} className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600">
+                  {showConfirmPw ? <EyeOff size={16} /> : <Eye size={16} />}
+                </button>
+              </div>
             </div>
 
-            <button
-              onClick={handleSendOTP}
-              className="w-full max-w-sm bg-[#1e3a5f] text-white py-3 rounded-lg font-semibold hover:bg-[#2a4a7c] transition"
-            >
-              {t("sendOtp")}
+            <button onClick={handleSendOTP} disabled={loading}
+              className="w-full bg-[#1e3a5f] text-white py-3 rounded-xl font-semibold hover:bg-[#2a4a7c] transition disabled:opacity-60 shadow-sm">
+              {loading ? "Sending…" : t("sendOtp")}
             </button>
-          </>
+          </div>
         )}
 
-        {/* OTP STEP */}
         {step === "OTP" && (
-          <>
-            <div className="max-w-sm mb-5">
-              <label className="text-sm font-medium">{t("enterOtp")}</label>
+          <div className="space-y-4 max-w-sm">
+            <div className="bg-[#d4af37]/10 border border-[#d4af37]/30 rounded-xl p-4 text-sm text-[#1e3a5f]">
+              <p className="font-semibold mb-1">OTP sent!</p>
+              <p className="text-slate-500 text-xs">Check your email <strong>{form.email}</strong> for a verification code.</p>
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1.5 uppercase tracking-wide">{t("enterOtp")}</label>
               <input
                 name="otp"
                 value={form.otp}
                 onChange={handleChange}
-                className="w-full max-w-sm bg-[#1e3a5f] text-white py-3 rounded-lg font-semibold hover:bg-[#2a4a7c] transition"
+                placeholder="Enter 6-digit OTP"
+                maxLength={6}
+                className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm text-center tracking-[0.3em] font-semibold text-[#1e3a5f] focus:ring-2 focus:ring-[#1e3a5f]/20 focus:border-[#1e3a5f] outline-none transition"
               />
             </div>
-
-            <button
-              onClick={handleVerifyAndRegister}
-              className="w-full max-w-sm bg-[#1e3a5f] text-white py-3 rounded-lg font-semibold hover:bg-[#2a4a7c] transition"
-            >
-              {t("verifyRegister")}
+            <button onClick={handleVerifyAndRegister} disabled={loading}
+              className="w-full bg-[#1e3a5f] text-white py-3 rounded-xl font-semibold hover:bg-[#2a4a7c] transition disabled:opacity-60 shadow-sm">
+              {loading ? "Verifying…" : t("verifyRegister")}
             </button>
-          </>
+            <button onClick={() => { setStep("FORM"); setError(""); setSuccess(""); }}
+              className="w-full text-sm text-slate-500 hover:text-[#1e3a5f] transition">
+              ← Edit details
+            </button>
+          </div>
         )}
 
-        <p className="mt-6 mb-10 text-sm text-gray-600">
+        <p className="mt-6 text-sm text-slate-500 max-w-sm">
           {t("alreadyAccount")}
-          <button
-            onClick={() => navigate("/login")}
-            className="ml-1 text-blue-700 hover:underline font-medium"
-          >
-            {t("signInHere")}
-          </button>
+          <button onClick={() => navigate("/login")} className="ml-1 text-[#1e3a5f] font-medium hover:underline">{t("signInHere")}</button>
         </p>
       </div>
 
-      {/* RIGHT SIDE – IMAGE */}
-      <div className="hidden md:flex relative">
-        <img
-          src="https://wallpaperaccess.com/full/8620211.jpg"
-          alt="Organic Products"
-          className="w-full h-full object-cover rounded-md"
-        />
-      <div className="absolute inset-0 bg-gradient-to-r from-[#1e3a5f]/60 via-[#2a4a7c]/40 to-[#1e3a5f]/60 flex flex-col justify-center px-6 md:px-16 animate-fadeIn">
-          <h2 className="text-3xl md:text-5xl font-extrabold text-black mb-3 md:mb-5 tracking-wide drop-shadow-lg">
-            Natural. Sustainable. Pure.
-          </h2>
-             <p className="text-gray text-sm md:text-lg lg:text-xl max-w-md md:max-w-lg leading-relaxed drop-shadow-md">
-            Explore premium organic products for your lifestyle, from eco-friendly skincare to sustainable household essentials.
+      {/* RIGHT — visual */}
+      <div className="hidden md:block relative overflow-hidden">
+        <img src="https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=1200&q=80" alt="Organic Farm"
+          className="w-full h-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#1e3a5f]/80 via-[#1e3a5f]/50 to-transparent" />
+        <div className="absolute inset-0 flex flex-col justify-end p-12">
+          <p className="text-[#d4af37] text-xs font-bold tracking-[0.25em] uppercase mb-3">Join Our Community</p>
+          <h2 className="text-4xl font-extrabold text-white mb-4 leading-tight">Fresh.<br />Organic.<br />Delivered.</h2>
+          <p className="text-white/70 text-sm max-w-xs leading-relaxed">
+            Join thousands of families making healthier choices with Mayan's organic products.
           </p>
         </div>
       </div>
 
-  {modal.type && (
-  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-    <div className="bg-white w-[90%] max-w-md rounded-2xl shadow-2xl p-8 text-center animate-scaleIn">
-
-      <div
-        className={`w-20 h-20 mx-auto flex items-center justify-center rounded-full mb-4 ${
-          modal.type === "success"
-            ? "bg-green-100"
-            : "bg-red-100"
-        }`}
-      >
-        {modal.type === "success" ? (
-          <svg
-            className="w-10 h-10 text-green-600"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="3"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-          </svg>
-        ) : (
-          <svg
-            className="w-10 h-10 text-red-600"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="3"
-            viewBox="0 0 24 24"
-          >
-            <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-          </svg>
-        )}
-      </div>
-
-      <h3
-        className={`text-2xl font-bold mb-3 ${
-          modal.type === "success"
-            ? "text-green-600"
-            : "text-red-600"
-        }`}
-      >
-        {modal.type === "success" ? "Success!" : "Error!"}
-      </h3>
-
-      <p className="text-gray-600 mb-6">{modal.message}</p>
-
-      <button
-        onClick={() => setModal({ type: null, message: "" })}
-        className="bg-[#2a4a7c] text-white px-6 py-2 rounded-lg hover:bg-[#1e3a5f]"
-      >
-        OK
-      </button>
-    </div>
-  </div>
-)}
+      {/* Success Modal */}
+      {showSuccessModal && (
+        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 w-[320px] text-center animate-scaleIn">
+            <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <CheckCircle className="w-8 h-8 text-green-500" />
+            </div>
+            <h3 className="text-xl font-bold text-[#1e3a5f] mb-2">Registration Successful!</h3>
+            <p className="text-slate-500 text-sm">{t("registerSuccess")}</p>
+            <p className="text-xs text-slate-400 mt-2">Redirecting to login…</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -25,7 +25,7 @@ export default function HotOffersPage() {
   });
 
   return (
-<main className="relative bg-white mt-6 pt-4 pb-5">
+<main className="bg-slate-50 min-h-screen pb-16">
   <OfferHero />
 
  <section className="max-w-7xl mx-auto px-4 py-8">

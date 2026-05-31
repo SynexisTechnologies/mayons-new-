@@ -8,21 +8,26 @@ export default function AboutPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="bg-white pt-24">
-     <section className="relative py-16 sm:py-20 bg-gradient-to-br from-[#1e3a5f]/10 via-white to-[#2a4a7c]/10">
+    <div className="bg-white">
+      {/* HERO */}
+      <section className="relative overflow-hidden min-h-[500px] md:min-h-[560px]">
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1600&q=80"
-            className="w-full h-full object-cover opacity-20"
+            className="w-full h-full object-cover"
             alt="Organic background"
           />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#1e3a5f]/90 via-[#1e3a5f]/60 to-[#1e3a5f]/20" />
         </div>
-
-        <div className="relative max-w-5xl mx-auto px-4 text-center">
-          <h1 className="text-4xl sm:text-5xl font-bold text-[#1e3a5f] mb-6">
+        <div className="relative z-10 min-h-[500px] md:min-h-[560px] flex flex-col items-center justify-center text-white text-center px-4 pt-[80px] md:pt-[130px] pb-14">
+          <div className="inline-flex items-center gap-2 bg-[#d4af37]/20 border border-[#d4af37]/40 text-[#d4af37] px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-4">
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" /></svg>
+            Our Story
+          </div>
+          <h1 className="text-3xl sm:text-5xl font-extrabold mb-3 drop-shadow tracking-tight">
             {t("aboutTitle")}
           </h1>
-          <p className="text-lg sm:text-xl text-gray-700 leading-relaxed">
+          <p className="text-white/70 text-sm sm:text-base max-w-xl leading-relaxed">
             {t("aboutDescription")}
           </p>
         </div>

@@ -1,111 +1,115 @@
-import { Facebook, Instagram, Twitter } from "lucide-react";
+import { Facebook, Instagram, Twitter, MapPin, Phone, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 export default function Footer() {
   const navigate = useNavigate();
 
   return (
-    <footer className="bg-gradient-to-r from-[#1e3a5f] to-[#2a4a7c] text-white mt-20">
-      <div className="max-w-7xl mx-auto px-6 py-14 grid gap-10 
-      grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5">
+    <footer className="bg-[#1e3a5f] text-white mt-20">
+      <div className="max-w-7xl mx-auto px-6 pt-14 pb-8">
+        <div className="grid gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 mb-12">
 
-        {/* PAYMENT METHODS */}
-        <div>
-          <h3 className="text-[#d4af37] font-semibold mb-4">
-            Payment methods
-          </h3>
-
-          <ul className="space-y-2 text-sm">
-            <li>Cash on delivery</li>
-            <li>Bank transfer</li>
-          </ul>
-        </div>
-
-        {/* INFO */}
-        <div>
-          <h3 className="text-[#d4af37] font-semibold mb-4">
-            Info
-          </h3>
-
-          <ul className="space-y-2 text-sm">
-            <li
-              onClick={() => navigate("/about")}
-              className="cursor-pointer hover:underline hover:text-[#d4af37] transition"
-            >
-              About us
-            </li>
-
-            <li
-              onClick={() => navigate("/contact")}
-              className="cursor-pointer hover:underline hover:text-[#d4af37] transition"
-            >
-              Contact us
-            </li>
-          </ul>
-        </div>
-
-        {/* MAYAN GROUP */}
-        <div>
-          <h3 className="text-[#d4af37] font-semibold mb-4">
-            Mayan’s GROUP
-          </h3>
-
-          <ul className="space-y-2 text-sm">
-            <li
-              onClick={() => navigate("/products")}
-              className="cursor-pointer hover:underline hover:text-[#d4af37] transition"
-            >
-              Mayan’s products
-            </li>
-
-            <li
-              onClick={() => navigate("/blog")}
-              className="cursor-pointer hover:underline hover:text-[#d4af37] transition"
-            >
-              Blog
-            </li>
-          </ul>
-        </div>
-
-        {/* HEAD OFFICE */}
-        <div>
-          <h3 className="text-[#d4af37] font-semibold mb-4">
-            HEAD OFFICE
-          </h3>
-
-          <div className="text-sm space-y-1">
-            <p>No 46, Old road</p>
-            <p>Watareka</p>
-            <p>Meegoda</p>
+          {/* BRAND */}
+          <div className="lg:col-span-1">
+            <div className="flex items-center gap-2 mb-4">
+              <div className="w-9 h-9 bg-[#d4af37] rounded-full flex items-center justify-center text-[#1e3a5f] font-black text-sm">M</div>
+              <div>
+                <p className="font-bold text-white leading-none">Mayan's</p>
+                <p className="text-[10px] text-[#d4af37] tracking-widest">ORGANIC</p>
+              </div>
             </div>
-        </div>
-     
-        {/* FOLLOW US */}
-        <div>
-          <h3 className="text-[#d4af37] font-semibold mb-4">
-            Follow us
-          </h3>
+            <p className="text-sm text-white/60 leading-relaxed">
+              Fresh, organic, and sustainable products sourced directly from trusted farmers.
+            </p>
+          </div>
 
-          <p className="text-sm mb-4">
-            Social media icons
+          {/* PAYMENT */}
+          <div>
+            <h3 className="text-[#d4af37] font-semibold mb-4 text-sm uppercase tracking-wider">Payment</h3>
+            <ul className="space-y-2 text-sm text-white/70">
+              <li>Cash on Delivery</li>
+              <li>Bank Transfer</li>
+            </ul>
+          </div>
+
+          {/* INFO */}
+          <div>
+            <h3 className="text-[#d4af37] font-semibold mb-4 text-sm uppercase tracking-wider">Company</h3>
+            <ul className="space-y-2 text-sm">
+              {[
+                { label: "About Us", href: "/about" },
+                { label: "Contact Us", href: "/contact" },
+                { label: "Our Blog", href: "/blog" },
+                { label: "Products", href: "/products" },
+              ].map((link) => (
+                <li key={link.href}>
+                  <button
+                    onClick={() => navigate(link.href)}
+                    className="text-white/70 hover:text-[#d4af37] transition"
+                  >
+                    {link.label}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* HEAD OFFICE */}
+          <div>
+            <h3 className="text-[#d4af37] font-semibold mb-4 text-sm uppercase tracking-wider">Head Office</h3>
+            <div className="space-y-3 text-sm text-white/70">
+              <div className="flex items-start gap-2">
+                <MapPin className="w-4 h-4 text-[#d4af37] flex-shrink-0 mt-0.5" />
+                <span>No 46, Old Road<br />Watareka, Meegoda</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Phone className="w-4 h-4 text-[#d4af37]" />
+                <span>+94 XX XXX XXXX</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Mail className="w-4 h-4 text-[#d4af37]" />
+                <span>info@mayons.lk</span>
+              </div>
+            </div>
+          </div>
+
+          {/* FOLLOW US */}
+          <div>
+            <h3 className="text-[#d4af37] font-semibold mb-4 text-sm uppercase tracking-wider">Follow Us</h3>
+            <div className="flex gap-3 mb-4">
+              {[
+                { Icon: Facebook, label: "Facebook" },
+                { Icon: Instagram, label: "Instagram" },
+                { Icon: Twitter, label: "Twitter" },
+              ].map(({ Icon, label }) => (
+                <button
+                  key={label}
+                  aria-label={label}
+                  className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#d4af37] hover:text-[#1e3a5f] transition"
+                >
+                  <Icon className="w-4 h-4" />
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-white/50">Stay connected for fresh updates and exclusive offers.</p>
+          </div>
+        </div>
+
+        {/* DIVIDER */}
+        <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/40">
+          <p>© 2026 Mayan's Organic Products. All rights reserved.</p>
+          <p>
+            Developed by{" "}
+            <a
+              href="https://synexis.lk"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-[#d4af37]/80 hover:text-[#d4af37] transition font-medium"
+            >
+              Synexis Technologies
+            </a>
           </p>
-
-          <div className="flex gap-4">
-            <Facebook className="cursor-pointer hover:scale-110 hover:text-[#d4af37] transition" />
-            <Instagram className="cursor-pointer hover:scale-110 hover:text-[#d4af37] transition" />
-            <Twitter className="cursor-pointer hover:scale-110 hover:text-[#d4af37] transition" />
-          </div>
-          <div className="text-sm space-y-3 mt-4">
-            <h2>Email:</h2>
-            <h2>Hotline:</h2>
-          </div>
         </div>
-
-      </div>
-
-      {/* bottom copyright */}
-      <div className="text-center text-sm border-t border-[#1e3a5f4d] py-4">
-        © 2026 Mayan Organic Products
       </div>
     </footer>
   );

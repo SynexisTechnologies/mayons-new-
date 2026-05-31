@@ -201,11 +201,14 @@ const renderCategory = (
       <button
         className="w-full text-left flex justify-between items-center px-2 py-1.5 rounded-lg text-[12px] text-slate-700 hover:text-[#1e3a5f] hover:bg-[#1e3a5f]/5 transition-colors font-semibold"
         onClick={() => {
-          navigate(`/products?category=${item.titleKey.toLowerCase()}`);
-          setIsCategoryOpen(false);
-          setIsMobileMenuOpen(false);
-          setIsMobileCategoryOpen(false);
-          if (hasChildren) toggleCategory(item.titleKey);
+          if (hasChildren) {
+            toggleCategory(item.titleKey);
+          } else {
+            navigate(`/products?category=${item.titleKey.toLowerCase()}`);
+            setIsCategoryOpen(false);
+            setIsMobileMenuOpen(false);
+            setIsMobileCategoryOpen(false);
+          }
         }}
       >
         <span>{t(item.titleKey)}</span>
@@ -380,10 +383,13 @@ const renderCategory = (
             <div
               className="flex justify-between items-center px-3 py-2 rounded-xl cursor-pointer text-[#1e3a5f] font-semibold text-[13px] hover:bg-[#1e3a5f]/5 hover:text-[#1e3a5f] transition-colors"
               onClick={() => {
-                navigate(`/products?category=${group.titleKey.toLowerCase()}`);
-                setIsCategoryOpen(false);
-                setIsMobileMenuOpen(false);
-                if (group.items?.length) toggleCategory(group.titleKey);
+                if (group.items?.length) {
+                  toggleCategory(group.titleKey);
+                } else {
+                  navigate(`/products?category=${group.titleKey.toLowerCase()}`);
+                  setIsCategoryOpen(false);
+                  setIsMobileMenuOpen(false);
+                }
               }}
             >
               <span>{t(group.titleKey)}</span>

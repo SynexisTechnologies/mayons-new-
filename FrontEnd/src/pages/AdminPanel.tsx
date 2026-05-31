@@ -24,7 +24,7 @@ export default function AdminPanel() {
   }, []);
 
   return (
-    <main className="bg-[#1e3a5f]/5 min-h-screen pt-32 px-6">
+    <main className="bg-slate-50 min-h-screen pt-36 px-6 pb-16">
 
       {/* HEADER */}
       <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4 mb-6">
