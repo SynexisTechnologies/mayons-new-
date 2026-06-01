@@ -1,6 +1,15 @@
 import { useEffect, useState } from "react";
 import { axiosInstance } from "../../api/apiConfig";
 
+const STATUS_STYLES: Record<string, string> = {
+  DELIVERED: "bg-green-100 text-green-700 border-green-200",
+  CANCELLED: "bg-red-100 text-red-700 border-red-200",
+  PROCESSING: "bg-blue-100 text-blue-700 border-blue-200",
+  PENDING: "bg-yellow-100 text-yellow-700 border-yellow-200",
+};
+
+const FILTERS = ["ALL", "DAILY", "WEEKLY", "MONTHLY", "YEARLY"];
+
 export default function OrdersTable() {
   const [orders, setOrders] = useState<any[]>([]);
   const [filteredOrders, setFilteredOrders] = useState<any[]>([]);
@@ -20,154 +29,98 @@ export default function OrdersTable() {
     }
   };
 
- const updateStatus = async (id: string, status: string) => {
-  try {
-    await axiosInstance.put(`/orders/admin/${id}/status`, { status });
-
-    // update state immediately
-    const updatedOrders = orders.map((order) =>
-      order._id === id ? { ...order, status } : order
-    );
-
-    setOrders(updatedOrders);
-    setFilteredOrders(updatedOrders);
-
-  } catch (err) {
-    console.error("Failed to update status", err);
-  }
-};
-
-
-  useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  useEffect(() => {
-    applyFilter(filter);
-  }, [filter, orders]);
-
-  const applyFilter = (type: string) => {
-    if (type === "ALL") {
-      setFilteredOrders(orders);
-      return;
+  const updateStatus = async (id: string, status: string) => {
+    try {
+      await axiosInstance.put(`/orders/admin/${id}/status`, { status });
+      const updated = orders.map((o) => (o._id === id ? { ...o, status } : o));
+      setOrders(updated);
+    } catch (err) {
+      console.error("Failed to update status", err);
     }
-
-    const now = new Date();
-
-    const filtered = orders.filter((order) => {
-      const orderDate = new Date(order.createdAt);
-
-      if (type === "DAILY") {
-        return orderDate.toDateString() === now.toDateString();
-      }
-
-      if (type === "WEEKLY") {
-        const weekAgo = new Date();
-        weekAgo.setDate(now.getDate() - 7);
-        return orderDate >= weekAgo;
-      }
-
-      if (type === "MONTHLY") {
-        return (
-          orderDate.getMonth() === now.getMonth() &&
-          orderDate.getFullYear() === now.getFullYear()
-        );
-      }
-
-      if (type === "YEARLY") {
-        return orderDate.getFullYear() === now.getFullYear();
-      }
-
-      return true;
-    });
-
-    setFilteredOrders(filtered);
   };
 
-  return (
-    <div className="bg-white p-6 rounded-2xl shadow-lg mt-10">
-      <div className="flex justify-between items-center mb-5">
-        <h2 className="text-2xl font-bold text-[#1e3a5f]">
-          Order Processing
-        </h2>
+  useEffect(() => { fetchOrders(); }, []);
 
-        {/* Filter */}
-        <select
-          value={filter}
-          onChange={(e) => setFilter(e.target.value)}
-          className="border px-3 py-2 rounded-lg"
-        >
-          <option value="ALL">All Orders</option>
-          <option value="DAILY">Today</option>
-          <option value="WEEKLY">This Week</option>
-          <option value="MONTHLY">This Month</option>
-          <option value="YEARLY">This Year</option>
-        </select>
+  useEffect(() => {
+    if (filter === "ALL") { setFilteredOrders(orders); return; }
+    const now = new Date();
+    setFilteredOrders(
+      orders.filter((order) => {
+        const d = new Date(order.createdAt);
+        if (filter === "DAILY") return d.toDateString() === now.toDateString();
+        if (filter === "WEEKLY") return d >= new Date(now.getTime() - 7 * 864e5);
+        if (filter === "MONTHLY") return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        if (filter === "YEARLY") return d.getFullYear() === now.getFullYear();
+        return true;
+      })
+    );
+  }, [filter, orders]);
+
+  return (
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 px-6 py-5 border-b border-gray-100">
+        <div>
+          <h2 className="text-lg font-bold text-[#1e3a5f]">Order Processing</h2>
+          <p className="text-xs text-gray-400 mt-0.5">{filteredOrders.length} orders</p>
+        </div>
+
+        {/* Filter pills */}
+        <div className="flex gap-2 flex-wrap">
+          {FILTERS.map((f) => (
+            <button key={f} onClick={() => setFilter(f)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition ${
+                filter === f
+                  ? "bg-[#1e3a5f] text-white"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+              }`}>
+              {f === "ALL" ? "All" : f === "DAILY" ? "Today" : f === "WEEKLY" ? "Week" : f === "MONTHLY" ? "Month" : "Year"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
-        <p>Loading orders...</p>
+        <div className="flex items-center justify-center py-16 text-gray-400 text-sm">
+          Loading orders…
+        </div>
       ) : (
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
-            <thead className="bg-[#1e3a5f] text-[#d4af37]">
-              <tr>
-                <th className="p-3 text-left">Customer</th>
-                <th>Phone</th>
-                <th>Address</th>
-                <th>Total</th>
-                <th>Status</th>
-                <th>Update</th>
+            <thead>
+              <tr className="bg-[#1e3a5f]/5 text-[#1e3a5f] text-xs font-semibold uppercase tracking-wide">
+                <th className="px-5 py-3 text-left">Customer</th>
+                <th className="px-4 py-3 text-left">Phone</th>
+                <th className="px-4 py-3 text-left">Address</th>
+                <th className="px-4 py-3 text-right">Total</th>
+                <th className="px-4 py-3 text-center">Status</th>
+                <th className="px-4 py-3 text-center">Update</th>
               </tr>
             </thead>
 
-            <tbody>
+            <tbody className="divide-y divide-gray-50">
               {filteredOrders.map((order) => (
-                <tr
-                  key={order._id}
-                  className="border-b hover:bg-gray-50"
-                >
-                  <td className="p-3">
+                <tr key={order._id} className="hover:bg-gray-50 transition">
+                  <td className="px-5 py-3.5 font-medium text-gray-800">
                     {order.user?.name || "Guest"}
                   </td>
-
-                  <td>{order.user?.phone || "-"}</td>
-
-                  {/* Address */}
-                  <td>
-                    {order.shippingAddress?.address ||
-                      order.address ||
-                      "No Address"}
+                  <td className="px-4 py-3.5 text-gray-500">
+                    {order.user?.phone || "—"}
                   </td>
-
-                  <td>Rs {order.totalPrice}</td>
-
-                  {/* Status */}
-                  <td>
-                    <span
-                      className={`px-3 py-1 rounded-full text-xs ${
-                        order.status === "DELIVERED"
-                          ? "bg-green-100 text-green-700"
-                          : order.status === "CANCELLED"
-                          ? "bg-red-100 text-red-700"
-                          : order.status === "PROCESSING"
-                          ? "bg-blue-100 text-blue-700"
-                          : "bg-yellow-100 text-yellow-700"
-                      }`}
-                    >
+                  <td className="px-4 py-3.5 text-gray-500 max-w-[180px] truncate">
+                    {order.shippingAddress?.address || order.address || "No Address"}
+                  </td>
+                  <td className="px-4 py-3.5 text-right font-semibold text-[#1e3a5f]">
+                    Rs {order.totalPrice?.toLocaleString()}
+                  </td>
+                  <td className="px-4 py-3.5 text-center">
+                    <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold border ${STATUS_STYLES[order.status] || "bg-gray-100 text-gray-600"}`}>
                       {order.status}
                     </span>
                   </td>
-
-                  {/* Update status */}
-                  <td>
-                    <select
-                      value={order.status}
-                      onChange={(e) =>
-                        updateStatus(order._id, e.target.value)
-                      }
-                      className="border px-2 py-1 rounded"
-                    >
+                  <td className="px-4 py-3.5 text-center">
+                    <select value={order.status} onChange={(e) => updateStatus(order._id, e.target.value)}
+                      className="text-xs border border-gray-200 px-2 py-1.5 rounded-lg bg-white focus:border-[#1e3a5f] outline-none transition">
                       <option value="PENDING">PENDING</option>
                       <option value="PROCESSING">PROCESSING</option>
                       <option value="DELIVERED">DELIVERED</option>
@@ -179,8 +132,8 @@ export default function OrdersTable() {
 
               {filteredOrders.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="text-center py-5">
-                    No Orders Found
+                  <td colSpan={6} className="text-center py-14 text-gray-400 text-sm">
+                    No orders found
                   </td>
                 </tr>
               )}

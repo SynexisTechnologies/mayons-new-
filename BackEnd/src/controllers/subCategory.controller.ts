@@ -63,10 +63,10 @@ export const getSubCategoriesByCategory = async (
   next: NextFunction
 ) => {
   try {
-    const { categoryId } = req.params;
+    const { id } = req.params;
 
     const subCategories = await SubCategoryModel.find({
-      category: categoryId,
+      category: id,
     });
 
     return res.json({
