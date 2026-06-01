@@ -11,7 +11,7 @@ export default function ResetEmailForm({ onSubmit, error }: Props) {
   const { t } = useLanguage();
 
   return (
-    <div className="w-full max-w-sm">
+    <div className="w-full">
       <button onClick={() => navigate(-1)} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-[#1e3a5f] mb-6 transition cursor-pointer">
         <ArrowLeft className="w-4 h-4" /> Back
       </button>

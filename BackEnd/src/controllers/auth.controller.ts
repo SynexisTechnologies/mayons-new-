@@ -347,16 +347,58 @@ export const refreshToken = async (req: Request, res: Response, next: NextFuncti
 };
 
 
-export const getAllUsers =  async(req:Request,res:Response,next:NextFunction) =>{
+export const getAllUsers = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const users = await userModel.find().select("-password -otpHash -resetOTP").sort({ createdAt: -1 });
+    res.status(200).json({ success: true, users });
+  } catch (error: any) {
+    res.status(500).json({ message: "internal server error" });
+  }
+};
 
-    try{
-       const users = await userModel.find().select("-password")
-       res.status(201).json(users) 
-    }catch(error:any){
-       res.status(500).json({message:"internal server error"})
-    } 
+export const updateUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { role, status } = req.body;
 
-}
+    const user = await userModel.findById(id);
+    if (!user) return next(new APIError(404, "User not found"));
+
+    if (role && ["admin", "user"].includes(role)) user.role = role;
+    if (status && ["Active", "Inactive"].includes(status)) user.status = status;
+
+    await user.save();
+    const u = user.toObject() as any;
+    delete u.password; delete u.otpHash; delete u.resetOTP;
+    res.json({ success: true, user: u });
+  } catch (error) { next(error); }
+};
+
+export const deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    if (req.user?.id === id) return next(new APIError(400, "Cannot delete your own account"));
+    const user = await userModel.findByIdAndDelete(id);
+    if (!user) return next(new APIError(404, "User not found"));
+    res.json({ success: true, message: "User deleted" });
+  } catch (error) { next(error); }
+};
+
+export const adminResetPassword = async (req: Request, res: Response, next: NextFunction) => {
+  try {
+    const { id } = req.params;
+    const { newPassword } = req.body;
+    if (!newPassword || newPassword.length < 6)
+      return next(new APIError(400, "Password must be at least 6 characters"));
+    const user = await userModel.findById(id);
+    if (!user) return next(new APIError(404, "User not found"));
+    user.password = await bcrypt.hash(newPassword, 10);
+    user.resetOTP = undefined;
+    user.resetOTPExpires = undefined;
+    await user.save();
+    res.json({ success: true, message: "Password reset successfully" });
+  } catch (error) { next(error); }
+};
 
 
 export const logout = (req:Request,res:Response,next:NextFunction) =>{

@@ -12,8 +12,8 @@ import { useCart } from "../context/CartContext";
 import CartDrawer from "./CartDrawer";
 import { useLanguage } from "../context/LanguageContext";
 import { navLinks } from "../data/data";
-import { megaCategories } from "../data/categories";
 import { useAuth } from "../context/AuthContext";
+import { getAllcat } from "../services/CategoryServices";
 import { productService } from "../services/ProductServices";
 import { Product } from "../components/product/types";
 
@@ -36,7 +36,8 @@ export default function Navbar() {
   const [filteredSuggestions, setFilteredSuggestions] = useState<
     { type: "product" | "category" | "subcategory"; label: string; value: string }[]
   >([]);
- const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  const [dbCategories, setDbCategories] = useState<any[]>([]);
+  const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
 
 const toggleCategory = (key: string) => {
   setExpandedCategories((prev) => ({
@@ -55,17 +56,28 @@ const closeCategoryMenu = () => {
 };
 
   useEffect(() => {
-  const fetchProducts = async () => {
-    try {
-      const data = await productService.getAll();
-      setAllProducts(data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+    const fetchProducts = async () => {
+      try {
+        const data = await productService.getAll();
+        setAllProducts(data);
+      } catch (error) {
+        console.error(error);
+      }
+    };
 
-  fetchProducts();
-}, []);
+    const fetchCategories = async () => {
+      try {
+        const cats = await getAllcat();
+        // Sort by createdAt ascending to preserve the seeded order
+        setDbCategories([...cats].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
+      } catch {
+        // silently fall back to empty — the UI degrades gracefully
+      }
+    };
+
+    fetchProducts();
+    fetchCategories();
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -139,27 +151,20 @@ const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     });
   });
 
-  // categories (megaCategories) and their items
-megaCategories.forEach((group) => {
-  group.items?.forEach((sub) => {
+  // categories from DB and their items
+dbCategories.forEach((group: any) => {
+  group.items?.forEach((sub: any) => {
     if (typeof sub === "string") {
-      const label = t(sub).toLowerCase();
-      if (label.includes(query)) {
-        // avoid duplicates
-        if (!suggestions.find((s) => s.value === sub)) {
-          suggestions.push({ type: "subcategory", label: t(sub), value: sub });
-        }
+      const lbl = t(sub).toLowerCase();
+      if (lbl.includes(query) && !suggestions.find((s) => s.value === sub)) {
+        suggestions.push({ type: "subcategory", label: t(sub), value: sub });
       }
-    }
-    // if sub is an object with titleKey, optionally include its sub-items
-    else if (typeof sub === "object" && sub.titleKey) {
-      sub.items?.forEach((inner) => {
+    } else if (typeof sub === "object" && sub.titleKey) {
+      sub.items?.forEach((inner: any) => {
         if (typeof inner === "string") {
-          const label = t(inner).toLowerCase();
-          if (label.includes(query)) {
-            if (!suggestions.find((s) => s.value === inner)) {
-              suggestions.push({ type: "subcategory", label: t(inner), value: inner });
-            }
+          const lbl = t(inner).toLowerCase();
+          if (lbl.includes(query) && !suggestions.find((s) => s.value === inner)) {
+            suggestions.push({ type: "subcategory", label: t(inner), value: inner });
           }
         }
       });
@@ -378,7 +383,7 @@ const renderCategory = (
 
     <div className="max-h-[65vh] overflow-y-auto scrollbar-hide p-2">
       <ul className="space-y-0.5">
-        {megaCategories.map((group) => (
+        {dbCategories.map((group) => (
           <li key={group.titleKey}>
             <div
               className="flex justify-between items-center px-3 py-2 rounded-xl cursor-pointer text-[#1e3a5f] font-semibold text-[13px] hover:bg-[#1e3a5f]/5 hover:text-[#1e3a5f] transition-colors"
@@ -392,7 +397,7 @@ const renderCategory = (
                 }
               }}
             >
-              <span>{t(group.titleKey)}</span>
+              <span>{language === "si" ? t(group.titleKey) : (group.name || t(group.titleKey))}</span>
               {group.items?.length ? (
                 <span className={`text-[10px] text-slate-400 transition-transform ${expandedCategories[group.titleKey] ? "rotate-90" : ""}`}>▶</span>
               ) : null}
@@ -400,7 +405,7 @@ const renderCategory = (
 
             {expandedCategories[group.titleKey] && group.items && (
               <ul className="ml-2 mb-1 space-y-0.5 border-l-2 border-[#d4af37]/30 pl-3">
-                {group.items.map((item) => renderCategory(item, 1))}
+                {group.items.map((item: any) => renderCategory(item, 1))}
               </ul>
             )}
           </li>
@@ -514,7 +519,7 @@ const renderCategory = (
 
 {isMobileCategoryOpen && (
   <div className="space-y-1">
-    {megaCategories.map((group) => (
+    {dbCategories.map((group) => (
       <div key={group.titleKey}>
         <button
           className="w-full text-left flex justify-between items-center px-3 py-2 rounded-xl text-[13px] font-bold text-[#1e3a5f] hover:bg-[#1e3a5f]/5 transition"
@@ -524,11 +529,11 @@ const renderCategory = (
             setIsMobileCategoryOpen(false);
           }}
         >
-          {t(group.titleKey)}
+          {language === "si" ? t(group.titleKey) : (group.name || t(group.titleKey))}
         </button>
         {group.items && group.items.length > 0 && (
           <ul className="ml-3 border-l-2 border-[#d4af37]/30 pl-3 space-y-0.5">
-            {group.items.map((item) => renderCategory(item))}
+            {group.items.map((item: any) => renderCategory(item))}
           </ul>
         )}
       </div>

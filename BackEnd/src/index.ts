@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import cors from "cors";
 import { seedStatus } from "./util/StatusInitializer";
 import { seedAdmin } from "./util/seedAdmin";
+import { seedCategories } from "./util/seedCategories";
 
 const { setServers } = require("node:dns/promises");
 setServers(["1.1.1.1", "8.8.8.8"]);
@@ -66,6 +67,7 @@ const startServer = async () => {
       ) {
         await seedStatus();
         await seedAdmin();
+        await seedCategories();
 
         // Ensure cart user unique index does not conflict with null entries
         try {

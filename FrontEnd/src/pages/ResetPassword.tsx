@@ -81,7 +81,7 @@ export default function ResetPassword() {
       </div>
 
       {/* ══ RIGHT — form ══ */}
-      <div className="flex flex-col justify-center px-8 sm:px-14 py-12 bg-white overflow-y-auto min-h-screen">
+      <div className="flex flex-col justify-center px-10 sm:px-16 lg:px-20 py-12 bg-white overflow-y-auto min-h-screen">
         {/* Mobile logo */}
         <div className="flex items-center gap-2 mb-8 md:hidden cursor-pointer" onClick={() => navigate("/")}>
           <div className="w-8 h-8 bg-[#1e3a5f] rounded-lg flex items-center justify-center">
@@ -90,7 +90,7 @@ export default function ResetPassword() {
           <p className="font-extrabold text-[#1e3a5f] text-sm">Organi</p>
         </div>
 
-        <div className="w-full max-w-sm mx-auto md:mx-0">
+        <div className="w-full">
           {/* Step indicator */}
           <div className="flex items-center gap-2 mb-8">
             {["Find account", "Reset password"].map((label, i) => {

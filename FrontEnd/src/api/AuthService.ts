@@ -27,6 +27,10 @@ export const verifyOtp = async (data: { email: string; otp: string }) => {
   return axiosInstance.post("/auth/verify-otp", data);
 };
 
+export const resendOtp = async (data: { email: string }) => {
+  return axiosInstance.post("/auth/resend-otp", data);
+};
+
 export const getResetUser = async (email: string) => {
   const res = await axiosInstance.post("/auth/get-reset-user", { email });
   return res.data;

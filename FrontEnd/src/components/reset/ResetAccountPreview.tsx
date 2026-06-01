@@ -54,7 +54,7 @@ export default function ResetAccountPreview({ user, onBack, error }: Props) {
 
   return (
     <>
-      <div className="w-full max-w-sm">
+      <div className="w-full">
         <button onClick={onBack} className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-[#1e3a5f] mb-6 transition cursor-pointer">
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
@@ -74,15 +74,17 @@ export default function ResetAccountPreview({ user, onBack, error }: Props) {
             </div>
           ))}
         </div>
-        {[
-          { label: t("emailAddress"), value: user.email },
-          { label: t("phoneNumber"),  value: user.mobile },
-        ].map(({ label, value }) => (
-          <div key={label} className="mb-3">
-            <label className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1 block">{label}</label>
-            <input value={value} disabled className={`${inputCls} ${disabledCls}`} />
-          </div>
-        ))}
+        <div className="grid grid-cols-2 gap-3 mb-3">
+          {[
+            { label: t("emailAddress"), value: user.email },
+            { label: t("phoneNumber"),  value: user.mobile },
+          ].map(({ label, value }) => (
+            <div key={label}>
+              <label className="text-xs font-bold text-slate-400 uppercase tracking-wide mb-1 block">{label}</label>
+              <input value={value} disabled className={`${inputCls} ${disabledCls}`} />
+            </div>
+          ))}
+        </div>
 
         {(localError || error) && (
           <p className="text-red-500 text-xs bg-red-50 px-3 py-2 rounded-lg mb-4">{localError || error}</p>
@@ -93,22 +95,24 @@ export default function ResetAccountPreview({ user, onBack, error }: Props) {
 
         {step === "PREVIEW" && (
           <div className="space-y-3 mt-5">
-            <div>
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 block">{t("newPassword")}</label>
-              <div className="relative">
-                <input type={showPw ? "text" : "password"} value={newPw} onChange={e => setNewPw(e.target.value)} className={`${inputCls} pr-10`} placeholder="••••••••" />
-                <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 cursor-pointer">
-                  {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 block">{t("newPassword")}</label>
+                <div className="relative">
+                  <input type={showPw ? "text" : "password"} value={newPw} onChange={e => setNewPw(e.target.value)} className={`${inputCls} pr-10`} placeholder="••••••••" />
+                  <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 cursor-pointer">
+                    {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
-            </div>
-            <div>
-              <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 block">{t("confirmPassword")}</label>
-              <div className="relative">
-                <input type={showConfirm ? "text" : "password"} value={confirmPw} onChange={e => setConfirmPw(e.target.value)} className={`${inputCls} pr-10`} placeholder="••••••••" />
-                <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 cursor-pointer">
-                  {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
+              <div>
+                <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 block">{t("confirmPassword")}</label>
+                <div className="relative">
+                  <input type={showConfirm ? "text" : "password"} value={confirmPw} onChange={e => setConfirmPw(e.target.value)} className={`${inputCls} pr-10`} placeholder="••••••••" />
+                  <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 cursor-pointer">
+                    {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
               </div>
             </div>
             <button onClick={handleSendOTP} disabled={loading}

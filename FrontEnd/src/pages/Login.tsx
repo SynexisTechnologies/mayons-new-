@@ -1,8 +1,9 @@
-import { ArrowLeft, Leaf, Eye, EyeOff, Shield, ShoppingBag, Star } from "lucide-react";
+import { ArrowLeft, Leaf, Eye, EyeOff, Shield, ShoppingBag, Star, Mail } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { useLanguage } from "../context/LanguageContext";
 import { useAuth } from "../context/AuthContext";
+import { resendOtp } from "../api/AuthService";
 
 const features = [
   { icon: Shield,      text: "Secure & encrypted account access" },
@@ -20,13 +21,16 @@ export default function Login() {
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState("");
   const [notRegistered, setNotRegistered] = useState(false);
+  const [notVerified, setNotVerified] = useState(false);
   const [showResetHighlight, setShowResetHighlight] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resendLoading, setResendLoading] = useState(false);
+  const [resendSent, setResendSent] = useState(false);
 
   const validateEmail = (v: string) => /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(v);
 
   const handleLogin = async () => {
-    setError(""); setNotRegistered(false);
+    setError(""); setNotRegistered(false); setNotVerified(false); setResendSent(false);
     if (!validateEmail(email)) { setError(t("invalidEmail")); return; }
     if (password.length < 6) { setError(t("passwordShort")); return; }
     setLoading(true);
@@ -35,9 +39,27 @@ export default function Login() {
       navigate("/");
     } catch (err: any) {
       const msg = (err.response?.data?.message || "").toLowerCase();
-      if (msg.includes("not found")) { setError(t("emailNotRegistered")); setNotRegistered(true); }
-      else { setError(t("invalidCredentials")); setShowResetHighlight(true); }
+      if (msg.includes("not found")) {
+        setError(t("emailNotRegistered")); setNotRegistered(true);
+      } else if (msg.includes("not verified") || msg.includes("verify your email")) {
+        setError("Account not verified. Please check your email for the OTP.");
+        setNotVerified(true);
+      } else {
+        setError(t("invalidCredentials")); setShowResetHighlight(true);
+      }
     } finally { setLoading(false); }
+  };
+
+  const handleResendVerification = async () => {
+    if (resendLoading || resendSent) return;
+    setResendLoading(true);
+    try {
+      await resendOtp({ email: email.toLowerCase() });
+      setResendSent(true);
+      setError("");
+    } catch {
+      setError("Failed to resend verification email.");
+    } finally { setResendLoading(false); }
   };
 
   return (
@@ -88,7 +110,7 @@ export default function Login() {
       </div>
 
       {/* ══ RIGHT — form ══ */}
-      <div className="flex flex-col justify-center px-8 sm:px-14 py-12 bg-white min-h-screen">
+      <div className="flex flex-col justify-center px-10 sm:px-16 lg:px-20 py-12 bg-white min-h-screen">
         {/* Mobile logo */}
         <div className="flex items-center gap-2 mb-8 md:hidden cursor-pointer" onClick={() => navigate("/")}>
           <div className="w-8 h-8 bg-[#1e3a5f] rounded-lg flex items-center justify-center">
@@ -97,7 +119,7 @@ export default function Login() {
           <p className="font-extrabold text-[#1e3a5f] text-sm">Organi</p>
         </div>
 
-        <div className="w-full max-w-sm mx-auto md:mx-0">
+        <div className="w-full">
           <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-[#1e3a5f] mb-8 transition cursor-pointer">
             <ArrowLeft className="w-4 h-4" /> Back to home
           </button>
@@ -110,7 +132,7 @@ export default function Login() {
               <label className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-1.5 block">{t("emailLabel")}</label>
               <input
                 value={email}
-                onChange={e => { setEmail(e.target.value); setNotRegistered(false); }}
+                onChange={e => { setEmail(e.target.value); setNotRegistered(false); setNotVerified(false); setResendSent(false); }}
                 onKeyDown={e => e.key === "Enter" && handleLogin()}
                 placeholder="you@example.com"
                 className="w-full border border-slate-200 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-[#1e3a5f]/15 focus:border-[#1e3a5f] outline-none transition"
@@ -140,7 +162,21 @@ export default function Login() {
               </div>
             </div>
 
-            {error && <p className="text-red-500 text-xs bg-red-50 border border-red-100 px-3 py-2.5 rounded-xl">{error}</p>}
+            {error && (
+              <div className="bg-red-50 border border-red-100 px-3 py-2.5 rounded-xl space-y-2">
+                <p className="text-red-500 text-xs">{error}</p>
+                {notVerified && (
+                  <button
+                    onClick={handleResendVerification}
+                    disabled={resendLoading || resendSent}
+                    className="flex items-center gap-1.5 text-xs font-semibold text-[#1e3a5f] hover:text-[#d4af37] transition cursor-pointer disabled:opacity-60"
+                  >
+                    <Mail className="w-3 h-3" />
+                    {resendSent ? "Verification email sent!" : resendLoading ? "Sending…" : "Resend verification email"}
+                  </button>
+                )}
+              </div>
+            )}
 
             <button onClick={handleLogin} disabled={loading}
               className="w-full bg-[#1e3a5f] text-white py-3.5 rounded-xl font-bold hover:bg-[#2a4a7c] transition disabled:opacity-60 shadow-sm cursor-pointer text-sm mt-2">

@@ -1,7 +1,7 @@
-import { ArrowLeft, Leaf, Eye, EyeOff, CheckCircle, Users, Package, Heart } from "lucide-react";
+import { ArrowLeft, Leaf, Eye, EyeOff, CheckCircle, Users, Package, Heart, RefreshCw } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import React, { useState } from "react";
-import { register, verifyOtp } from "../api/AuthService";
+import React, { useState, useEffect, useRef } from "react";
+import { register, verifyOtp, resendOtp } from "../api/AuthService";
 import { useLanguage } from "../context/LanguageContext";
 
 interface RegisterForm {
@@ -15,6 +15,8 @@ const features = [
   { icon: Users,   text: "Join 50,000+ healthy families" },
 ];
 
+const RESEND_DELAY = 60;
+
 export default function Register() {
   const navigate = useNavigate();
   const { t } = useLanguage();
@@ -26,6 +28,23 @@ export default function Register() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const [resending, setResending] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  useEffect(() => {
+    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+  }, []);
+
+  const startCooldown = () => {
+    setResendCooldown(RESEND_DELAY);
+    timerRef.current = setInterval(() => {
+      setResendCooldown(c => {
+        if (c <= 1) { clearInterval(timerRef.current!); return 0; }
+        return c - 1;
+      });
+    }, 1000);
+  };
 
   const valid = {
     email: (v: string) => /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(v),
@@ -53,11 +72,25 @@ export default function Register() {
     try {
       await register({ firstName: form.firstName, lastName: form.lastName, email: form.email, mobile: form.phone, password: form.password, role: "user" });
       setStep("OTP");
+      startCooldown();
     } catch (e: any) { setError(e.response?.data?.message || "Signup failed"); }
     finally { setLoading(false); }
   };
 
+  const handleResendOTP = async () => {
+    if (resendCooldown > 0 || resending) return;
+    setError("");
+    setResending(true);
+    try {
+      await resendOtp({ email: form.email });
+      startCooldown();
+    } catch (e: any) { setError(e.response?.data?.message || "Failed to resend OTP"); }
+    finally { setResending(false); }
+  };
+
   const handleVerify = async () => {
+    if (!form.otp || form.otp.length !== 6) { setError("Enter the 6-digit OTP"); return; }
+    setError("");
     setLoading(true);
     try {
       await verifyOtp({ email: form.email, otp: form.otp });
@@ -116,7 +149,7 @@ export default function Register() {
       </div>
 
       {/* ══ RIGHT — form ══ */}
-      <div className="flex flex-col justify-center px-8 sm:px-14 py-12 bg-white overflow-y-auto min-h-screen">
+      <div className="flex flex-col justify-center px-10 sm:px-16 lg:px-20 py-12 bg-white overflow-y-auto min-h-screen">
         <div className="flex items-center gap-2 mb-8 md:hidden cursor-pointer" onClick={() => navigate("/")}>
           <div className="w-8 h-8 bg-[#1e3a5f] rounded-lg flex items-center justify-center">
             <Leaf className="w-4 h-4 text-[#d4af37]" />
@@ -124,7 +157,7 @@ export default function Register() {
           <p className="font-extrabold text-[#1e3a5f] text-sm">Organi</p>
         </div>
 
-        <div className="w-full max-w-sm mx-auto md:mx-0">
+        <div className="w-full">
           <button onClick={() => navigate("/")} className="flex items-center gap-1.5 text-sm text-slate-400 hover:text-[#1e3a5f] mb-8 transition cursor-pointer">
             <ArrowLeft className="w-4 h-4" /> Back to home
           </button>
@@ -148,36 +181,42 @@ export default function Register() {
                   </div>
                 </div>
 
-                <div>
-                  <label className={labelCls}>{t("emailAddress")}</label>
-                  <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="you@example.com" className={inputCls} />
-                </div>
-
-                <div>
-                  <label className={labelCls}>{t("phoneNumber")}</label>
-                  <input name="phone" value={form.phone} placeholder="+94XXXXXXXXX"
-                    onChange={e => {
-                      let v = e.target.value;
-                      if (!v.startsWith("+94")) v = "+94";
-                      v = "+94" + v.slice(3).replace(/\D/g, "").slice(0, 9);
-                      setForm(p => ({ ...p, phone: v }));
-                    }}
-                    className={inputCls} />
-                </div>
-
-                <div>
-                  <label className={labelCls}>{t("password")}</label>
-                  <div className="relative">
-                    <input type={showPw ? "text" : "password"} name="password" value={form.password} onChange={handleChange} placeholder="Min 6 chars with a number" className={`${inputCls} pr-11`} />
-                    <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3.5 top-3 text-slate-400 cursor-pointer"><Eye className="w-4 h-4" /></button>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}>{t("emailAddress")}</label>
+                    <input name="email" type="email" value={form.email} onChange={handleChange} placeholder="you@example.com" className={inputCls} />
+                  </div>
+                  <div>
+                    <label className={labelCls}>{t("phoneNumber")}</label>
+                    <input name="phone" value={form.phone} placeholder="+94XXXXXXXXX"
+                      onChange={e => {
+                        let v = e.target.value;
+                        if (!v.startsWith("+94")) v = "+94";
+                        v = "+94" + v.slice(3).replace(/\D/g, "").slice(0, 9);
+                        setForm(p => ({ ...p, phone: v }));
+                      }}
+                      className={inputCls} />
                   </div>
                 </div>
 
-                <div>
-                  <label className={labelCls}>{t("confirmPassword")}</label>
-                  <div className="relative">
-                    <input type={showConfirm ? "text" : "password"} name="confirmPassword" value={form.confirmPassword} onChange={handleChange} placeholder="Repeat password" className={`${inputCls} pr-11`} />
-                    <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3.5 top-3 text-slate-400 cursor-pointer"><Eye className="w-4 h-4" /></button>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className={labelCls}>{t("password")}</label>
+                    <div className="relative">
+                      <input type={showPw ? "text" : "password"} name="password" value={form.password} onChange={handleChange} placeholder="Min 6 chars, 1 number" className={`${inputCls} pr-11`} />
+                      <button type="button" onClick={() => setShowPw(!showPw)} className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600 cursor-pointer">
+                        {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className={labelCls}>{t("confirmPassword")}</label>
+                    <div className="relative">
+                      <input type={showConfirm ? "text" : "password"} name="confirmPassword" value={form.confirmPassword} onChange={handleChange} placeholder="Repeat password" className={`${inputCls} pr-11`} />
+                      <button type="button" onClick={() => setShowConfirm(!showConfirm)} className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600 cursor-pointer">
+                        {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
                   </div>
                 </div>
 
@@ -203,6 +242,7 @@ export default function Register() {
                 <div>
                   <label className={labelCls}>{t("enterOtp")}</label>
                   <input name="otp" value={form.otp} onChange={handleChange} maxLength={6}
+                    onKeyDown={e => e.key === "Enter" && handleVerify()}
                     placeholder="000000"
                     className={`${inputCls} text-center tracking-[0.5em] font-bold text-[#1e3a5f] text-xl`} />
                 </div>
@@ -212,9 +252,21 @@ export default function Register() {
                   {loading ? "Verifying…" : t("verifyRegister")}
                 </button>
 
-                <button onClick={() => { setStep("FORM"); setError(""); }} className="w-full text-sm text-slate-400 hover:text-[#1e3a5f] transition cursor-pointer py-1">
-                  ← Edit details
-                </button>
+                {/* Resend OTP */}
+                <div className="flex items-center justify-between pt-1">
+                  <button onClick={() => { setStep("FORM"); setError(""); setForm(p => ({ ...p, otp: "" })); }}
+                    className="text-sm text-slate-400 hover:text-[#1e3a5f] transition cursor-pointer">
+                    ← Edit details
+                  </button>
+                  <button
+                    onClick={handleResendOTP}
+                    disabled={resendCooldown > 0 || resending}
+                    className="flex items-center gap-1.5 text-sm font-medium transition cursor-pointer disabled:cursor-not-allowed disabled:opacity-50 text-[#1e3a5f] hover:text-[#d4af37]"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${resending ? "animate-spin" : ""}`} />
+                    {resendCooldown > 0 ? `Resend in ${resendCooldown}s` : "Resend OTP"}
+                  </button>
+                </div>
               </div>
             </>
           )}
