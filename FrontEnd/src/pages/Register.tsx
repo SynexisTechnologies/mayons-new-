@@ -67,7 +67,8 @@ export default function Register() {
 
   const valid = {
     email: (v: string) => /^[a-z0-9._%+-]+@[a-z0-9.-]+\.[a-z]{2,}$/.test(v),
-    password: (v: string) => /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(v),
+    password: (v: string) =>
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(v),
     phone: (v: string) => {
       if (!v.startsWith("+94")) return t("phoneStart");
       if (!/^\d+$/.test(v.slice(3))) return t("phoneDigits");
@@ -286,7 +287,7 @@ export default function Register() {
                         name="password"
                         value={form.password}
                         onChange={handleChange}
-                        placeholder="Min 6 chars, 1 number"
+                        placeholder="8+ chars: A-Z, a-z, 0-9, symbol"
                         className={`${inputCls} pr-11`}
                       />
                       <button

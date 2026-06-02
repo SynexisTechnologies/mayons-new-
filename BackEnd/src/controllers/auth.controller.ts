@@ -7,6 +7,7 @@ import { error } from "console";
 import { generateOTP, hashOTP } from "../util/generateOTP";
 import OtpModel from "../models/OtpModel";
 import { sendOTPEmail } from "../util/emailService";
+import { isStrongPassword, PASSWORD_RULES_MESSAGE } from "../util/validatePassword";
 import {  userModel } from "../models/userModel";
 import { randomBytes, randomInt } from "crypto";
 
@@ -107,6 +108,9 @@ const normalizedEmail = String(email || "").toLowerCase();
 
 const detectedRole = role || (email.endsWith("@admin.com") ? "admin" : "user");
 
+if (!isStrongPassword(password)) {
+  return res.status(400).json({ message: PASSWORD_RULES_MESSAGE });
+}
 
 const hashedPassword = await bcrypt.hash(password, 12);
 const otp = generateOTP();
@@ -388,8 +392,8 @@ export const adminResetPassword = async (req: Request, res: Response, next: Next
   try {
     const { id } = req.params;
     const { newPassword } = req.body;
-    if (!newPassword || newPassword.length < 6)
-      return next(new APIError(400, "Password must be at least 6 characters"));
+    if (!isStrongPassword(newPassword))
+      return next(new APIError(400, PASSWORD_RULES_MESSAGE));
     const user = await userModel.findById(id);
     if (!user) return next(new APIError(404, "User not found"));
     user.password = await bcrypt.hash(newPassword, 10);
@@ -488,6 +492,9 @@ export const resetPassword = async (req: Request, res: Response) => {
   try {
     const { email, newPassword } = req.body;
     if (!email || !newPassword) return res.status(400).json({ message: "Email and new password required" });
+    if (!isStrongPassword(newPassword)) {
+      return res.status(400).json({ message: PASSWORD_RULES_MESSAGE });
+    }
     const normalizedEmail = String(email || "").toLowerCase();
     const user = await userModel.findOne({ email: normalizedEmail });
     if (!user) return res.status(404).json({ message: "User not found" });

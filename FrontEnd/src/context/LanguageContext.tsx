@@ -313,7 +313,7 @@ const translations = {
     phoneDigits: "Phone number must contain only digits after +94",
     phoneLength: "After +94, exactly 9 digits are required",
     passwordRules:
-      "Password must be at least 6 characters and contain letters & numbers",
+      "Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number and a symbol",
     otpSent: "OTP sent successfully to your email address",
     passwordMismatch: "Passwords do not match",
     otpInvalid: "OTP must be 6 digits",
@@ -942,7 +942,7 @@ const translations = {
     phoneStart: "දුරකථන අංකය +94 සමඟ ආරම්භ විය යුතුය",
     phoneDigits: "+94ට පසු අංක පමණක් ඇතුළත් කළ යුතුය",
     phoneLength: "+94ට පසු අංක 9ක් විය යුතුය",
-    passwordRules: "මුරපදය අවම වශයෙන් අකුරු සහ අංක සමඟ අක්ෂර 6ක් විය යුතුය",
+    passwordRules: "මුරපදය අවම වශයෙන් අක්ෂර 8ක් විය යුතු අතර ලොකු අකුරක්, කුඩා අකුරක්, අංකයක් සහ සංකේතයක් අඩංගු විය යුතුය",
     otpSent: "OTP ඔබගේ විද්‍යුත් තැපැල් ලිපිනයට සාර්ථකව යවා ඇත",
     passwordMismatch: "මුරපද එකිනෙක නොගැලපේ",
     otpInvalid: "OTP අංක 6ක් විය යුතුය",

@@ -92,7 +92,10 @@ export default function UsersTable() {
   const handleResetPassword = async () => {
     if (!resetModal.user) return;
     setResetError("");
-    if (newPw.length < 6) { setResetError("Password must be at least 6 characters"); return; }
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(newPw)) {
+      setResetError("Password must be at least 8 characters and include an uppercase letter, a lowercase letter, a number and a symbol");
+      return;
+    }
     if (newPw !== confirmPw) { setResetError("Passwords do not match"); return; }
     setResetLoading(true);
     try {

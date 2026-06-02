@@ -36,7 +36,8 @@ export default function ResetAccountPreview({ user, onBack, error }: Props) {
     message: "",
   });
 
-  const validatePassword = (p: string) => /^(?=.*[A-Za-z])(?=.*\d)[A-Za-z\d]{6,}$/.test(p);
+  const validatePassword = (p: string) =>
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(p);
 
   const handleSendOTP = async () => {
     setLocalError("");
