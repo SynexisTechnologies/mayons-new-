@@ -2,7 +2,7 @@ import { Clock } from "lucide-react";
 import { Offer } from "../../data/offer";
 import ProductCard from "../product/ProductCard";
 
-export default function OfferCard({ offer }: { offer: Offer }) {
+export default function OfferCard({ offer, onViewDetails }: { offer: Offer; onViewDetails?: () => void }) {
   const now = new Date();
   const end = offer.endDate ? new Date(offer.endDate) : null;
 
@@ -39,7 +39,7 @@ export default function OfferCard({ offer }: { offer: Offer }) {
         </div>
       )}
 
-      <ProductCard product={offer.product} />
+      <ProductCard product={offer.product} onViewDetails={onViewDetails} />
     </div>
   );
 }

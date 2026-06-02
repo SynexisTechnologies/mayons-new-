@@ -17,7 +17,7 @@ export default function EatCategoryFilter({
           onClick={() => onChange(cat)}
           className={`px-6 py-2 rounded-lg font-semibold ${
             selected === cat
-              ? "bg-[#860ba0] text-white"
+              ? "bg-[#1e3a5f] text-white"
               : "bg-gray-100 hover:bg-gray-200"
           }`}
         >

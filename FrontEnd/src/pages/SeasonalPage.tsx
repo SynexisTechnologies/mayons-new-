@@ -4,11 +4,14 @@ import { OfferService } from "../services/OffersServices";
 import OfferCard from "../components/hotOffers/OffersCard";
 import { Offer } from "../data/offer";
 import { ArrowRight, Leaf } from "lucide-react";
+import ProductDetailsModal from "../components/product/ProductDetailsModel";
+import { Product } from "../components/product/types";
 
 export default function SeasonalPage() {
   const navigate = useNavigate();
   const [seasonalOffers, setSeasonalOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -63,7 +66,7 @@ export default function SeasonalPage() {
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
             {seasonalOffers.map((offer) => (
-              <OfferCard key={offer._id} offer={offer} />
+              <OfferCard key={offer._id} offer={offer} onViewDetails={offer.product ? () => setSelectedProduct(offer.product!) : undefined} />
             ))}
           </div>
         )}
@@ -78,6 +81,12 @@ export default function SeasonalPage() {
           </button>
         </div>
       </div>
+      {selectedProduct && (
+        <ProductDetailsModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+        />
+      )}
     </section>
   );
 }

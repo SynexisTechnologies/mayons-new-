@@ -6,9 +6,9 @@ import { useLanguage } from "../../context/LanguageContext";
 import { useCart } from "../../context/CartContext";
 import { imageUrl } from "../../utils/imageUrl";
 
-type Props = { product: Product };
+type Props = { product: Product; onViewDetails?: () => void };
 
-export default function ProductCard({ product }: Props) {
+export default function ProductCard({ product, onViewDetails }: Props) {
   const { addToCart } = useCart();
   const { toggleFavorite, favorites } = useFavorites();
   const { language, t } = useLanguage();
@@ -54,7 +54,10 @@ export default function ProductCard({ product }: Props) {
       }`}
     >
       {/* IMAGE */}
-      <div className="relative aspect-square overflow-hidden bg-stone-50">
+      <div
+        className={`relative aspect-square overflow-hidden bg-stone-50 ${onViewDetails ? "cursor-pointer" : ""}`}
+        onClick={onViewDetails}
+      >
         <img
           src={imageUrl(product.image)}
           alt={productName}
@@ -90,7 +93,10 @@ export default function ProductCard({ product }: Props) {
 
       {/* INFO */}
       <div className="p-4 flex flex-col flex-1 gap-2.5">
-        <h3 className="font-semibold text-ink text-[15px] leading-snug line-clamp-2 min-h-[2.6em]">
+        <h3
+          className={`font-semibold text-ink text-[15px] leading-snug line-clamp-2 min-h-[2.6em] ${onViewDetails ? "cursor-pointer hover:text-evergreen transition-colors" : ""}`}
+          onClick={onViewDetails}
+        >
           {productName}
         </h3>
 

@@ -2,6 +2,7 @@ import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useFavorites } from "../context/FavoriteContext";
 import ProductCard from "../components/product/ProductCard";
+import ProductDetailsModal from "../components/product/ProductDetailsModel";
 import { Product } from "../components/product/types";
 import { productService } from "../services/ProductServices";
 import { megaCategories } from "../data/categories";
@@ -44,6 +45,7 @@ export default function ProductPage() {
 
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [category, setCategory] = useState("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState("featured");
@@ -421,7 +423,7 @@ export default function ProductPage() {
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                     {subProducts.map((p) => (
-                      <ProductCard key={p._id} product={p} />
+                      <ProductCard key={p._id} product={p} onViewDetails={() => setSelectedProduct(p)} />
                     ))}
                   </div>
                 </div>
@@ -434,7 +436,7 @@ export default function ProductPage() {
         {!loading && filteredProducts.length > 0 && !selectedMainCategory && (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {filteredProducts.map((p) => (
-              <ProductCard key={p._id} product={p} />
+              <ProductCard key={p._id} product={p} onViewDetails={() => setSelectedProduct(p)} />
             ))}
           </div>
         )}
@@ -445,6 +447,13 @@ export default function ProductPage() {
           </p>
         )}
       </section>
+
+      {selectedProduct && (
+        <ProductDetailsModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+        />
+      )}
     </main>
   );
 }

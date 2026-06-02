@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800;9..144,900&family=Inter:wght@300;400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -6,25 +6,23 @@
    Tailwind v4 reads these and generates utilities (bg-evergreen, text-honey…)
    ═══════════════════════════════════════════════════════════════════════════ */
 @theme {
-  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-display: "Inter", system-ui, -apple-system, sans-serif;
   --font-sans: "Inter", system-ui, -apple-system, sans-serif;
 
   /* Surfaces */
   --color-canvas: #faf9f6;   /* soft porcelain page background */
-  --color-cream: #f4eef6;    /* faint lilac-tinted panels */
+  --color-cream: #edf2f8;    /* faint blue-tinted panels */
   --color-sand: #e9e2d2;     /* (unused alias kept for safety) */
   --color-sand-100: #efe8d8;
   --color-sand-200: #e4dac4;
 
-  /* Brand — Mayons purple (#860ba0) family.
-     NOTE: token names (evergreen/forest/pine…) are kept for compatibility;
-     their VALUES are the purple/yellow/red brand. See memory: design-system. */
-  --color-ink: #241526;        /* near-black plum — primary text */
-  --color-evergreen: #860ba0;  /* PRIMARY brand purple (bars, buttons) */
-  --color-forest: #6d0884;     /* deeper purple — hover */
+  /* Brand — Navy #1e3a5f family. */
+  --color-ink: #0d1e30;        /* dark navy — primary text */
+  --color-evergreen: #1e3a5f;  /* PRIMARY brand navy (bars, buttons) */
+  --color-forest: #162d4a;     /* deeper navy — hover */
   --color-pine: #2d8a55;       /* success green (kept green on purpose) */
-  --color-sage: #9c7aa6;       /* muted mauve — icon accents */
-  --color-mist: #f1e3f6;       /* faint lavender tint */
+  --color-sage: #5b7fa3;       /* muted blue — icon accents */
+  --color-mist: #e8f0f8;       /* faint blue tint */
 
   /* Accent — logo yellow */
   --color-honey: #c98a00;        /* deep gold — readable on light bg */
@@ -35,14 +33,14 @@
   --color-clay: #d62839;       /* red — sale / hot / error */
   --color-clay-soft: #fbe3e5;
 
-  /* Neutrals (faint cool-tinted greys) */
-  --color-stone-50: #f6f4f7;
-  --color-stone-100: #eeeaef;
-  --color-stone-200: #e1dce3;
-  --color-stone-300: #c8c1cb;
-  --color-stone-400: #a097a4;
-  --color-stone-500: #756a78;
-  --color-stone-600: #534a56;
+  /* Neutrals (faint cool blue-tinted greys) */
+  --color-stone-50: #f4f6fa;
+  --color-stone-100: #e6ebf3;
+  --color-stone-200: #d3dbe8;
+  --color-stone-300: #b0bccc;
+  --color-stone-400: #7c8fa6;
+  --color-stone-500: #546070;
+  --color-stone-600: #394e60;
 
   /* Motion */
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -125,11 +123,11 @@ button, [role="button"] { cursor: pointer; }
 .btn-primary {
   background: var(--color-evergreen);
   color: #fff;
-  box-shadow: 0 10px 28px -12px rgba(134, 11, 160, 0.7);
+  box-shadow: 0 10px 28px -12px rgba(30, 58, 95, 0.55);
 }
 .btn-primary:hover {
   background: var(--color-forest);
-  box-shadow: 0 16px 38px -12px rgba(134, 11, 160, 0.65);
+  box-shadow: 0 16px 38px -12px rgba(30, 58, 95, 0.5);
   transform: translateY(-2px);
 }
 

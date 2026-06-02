@@ -5,10 +5,13 @@ import { getAllOffers } from "../api/OfferApi";
 import OfferFilters from "../components/hotOffers/OffersFilters";
 import OfferCard from "../components/hotOffers/OffersCard";
 import OfferHero from "../components/hotOffers/OfferHero";
+import ProductDetailsModal from "../components/product/ProductDetailsModel";
+import { Product } from "../components/product/types";
 
 export default function HotOffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [selected, setSelected] = useState("ALL");
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     getAllOffers().then(setOffers);
@@ -33,7 +36,7 @@ export default function HotOffersPage() {
           {filtered
             .filter((offer) => offer.product)
             .map((offer) => (
-              <OfferCard key={offer._id || offer.product?._id} offer={offer} />
+              <OfferCard key={offer._id || offer.product?._id} offer={offer} onViewDetails={offer.product ? () => setSelectedProduct(offer.product!) : undefined} />
             ))}
         </div>
 
@@ -41,6 +44,12 @@ export default function HotOffersPage() {
           <OffersNewsletter />
         </div>
       </section>
+      {selectedProduct && (
+        <ProductDetailsModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+        />
+      )}
     </main>
   );
 }

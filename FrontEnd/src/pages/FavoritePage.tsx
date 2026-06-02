@@ -1,14 +1,18 @@
+import { useState } from "react";
 import { useFavorites, FavoriteItem } from "../context/FavoriteContext";
 import ProductCard from "../components/product/ProductCard";
+import ProductDetailsModal from "../components/product/ProductDetailsModel";
 import RestaurantCard from "../components/Eats/RestaurantCard";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft, Heart, Trash2, ArrowRight } from "lucide-react";
 import { useLanguage } from "../context/LanguageContext";
+import { Product } from "../components/product/types";
 
 export default function FavoritePage() {
   const { favorites, toggleFavorite } = useFavorites();
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   const handleClearAll = () => {
     if (confirm("Clear all favorites?")) {
@@ -68,7 +72,7 @@ export default function FavoritePage() {
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-5">
             {favorites.map((item) => {
               if (item.type === "product")
-                return <ProductCard key={`p-${item.data._id}`} product={item.data} />;
+                return <ProductCard key={`p-${item.data._id}`} product={item.data} onViewDetails={() => setSelectedProduct(item.data)} />;
               if (item.type === "restaurant")
                 return (
                   <RestaurantCard
@@ -82,6 +86,13 @@ export default function FavoritePage() {
           </div>
         )}
       </div>
+
+      {selectedProduct && (
+        <ProductDetailsModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+        />
+      )}
     </div>
   );
 }

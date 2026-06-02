@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { ArrowRight, Tag } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import ProductCard from "./ProductCard";
+import ProductDetailsModal from "./ProductDetailsModel";
 import { useLanguage } from "../../context/LanguageContext";
 import { Product } from "./types";
 import { productService } from "../../services/ProductServices";
@@ -11,6 +12,7 @@ export default function BestOffer() {
   const { t } = useLanguage();
   const [bestOffers, setBestOffers] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
   useEffect(() => {
     productService
@@ -66,7 +68,7 @@ export default function BestOffer() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {bestOffers.map((product) => (
-              <ProductCard key={product._id || product.pluNumber} product={product} />
+              <ProductCard key={product._id || product.pluNumber} product={product} onViewDetails={() => setSelectedProduct(product)} />
             ))}
           </div>
         )}
@@ -80,6 +82,13 @@ export default function BestOffer() {
           </div>
         )}
       </div>
+
+      {selectedProduct && (
+        <ProductDetailsModal
+          product={selectedProduct}
+          onClose={() => setSelectedProduct(null)}
+        />
+      )}
     </section>
   );
 }
