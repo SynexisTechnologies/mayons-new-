@@ -105,7 +105,7 @@ export default function Footer() {
               </div>
               <div className="flex items-center gap-2.5">
                 <Phone className="w-4 h-4 text-honey-light" />
-                <span>+94 XX XXX XXXX</span>
+                <span>+94 70 244 23 17</span>
               </div>
               <div className="flex items-center gap-2.5">
                 <Mail className="w-4 h-4 text-honey-light" />
@@ -130,12 +130,12 @@ export default function Footer() {
           <p>
             Developed by{" "}
             <a
-              href="https://synexis.lk"
+              href="https://synexis.one"
               target="_blank"
               rel="noopener noreferrer"
               className="text-honey-light/80 hover:text-honey-light transition font-medium"
             >
-              Synexis Technologies
+              Synexis.one
             </a>
           </p>
         </div>

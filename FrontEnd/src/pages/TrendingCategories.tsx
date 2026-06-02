@@ -2,31 +2,6 @@ import { useLanguage } from "../context/LanguageContext";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { ArrowRight, Sparkles } from "lucide-react";
-import { megaCategories } from "../data/categories";
-
-/* Representative imagery per real top-level category (from data/categories.ts) */
-const CATEGORY_IMAGES: Record<string, string> = {
-  groceryShop: "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80",
-  cakes: "https://images.unsplash.com/photo-1578985545062-69928b1d9587?w=400&q=80",
-  flowers: "https://images.unsplash.com/photo-1490750967868-88aa4486c946?w=400&q=80",
-  clothing: "https://images.unsplash.com/photo-1523381210434-271e8be1f52b?w=400&q=80",
-  bookShop: "https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=400&q=80",
-  pharmacy: "https://images.unsplash.com/photo-1471864190281-a93a3070b6de?w=400&q=80",
-  partyReligious: "https://images.unsplash.com/photo-1530103862676-de8c9debad1d?w=400&q=80",
-  vegetablesFruits: "https://images.unsplash.com/photo-1610832958506-aa56368176cf?w=400&q=80",
-  bakery: "https://images.unsplash.com/photo-1509440159596-0249088772ff?w=400&q=80",
-  toys: "https://images.unsplash.com/photo-1558877385-8c1b8e6e6b3e?w=400&q=80",
-  electronics: "https://images.unsplash.com/photo-1498049794561-7780e7231661?w=400&q=80",
-  kitchenItems: "https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=80",
-  plastic: "https://images.unsplash.com/photo-1610557892470-55d9e80c0bce?w=400&q=80",
-  petCare: "https://images.unsplash.com/photo-1587300003388-59208cc962cb?w=400&q=80",
-  handBagsShoes: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?w=400&q=80",
-  cosmetics: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?w=400&q=80",
-  perfumes: "https://images.unsplash.com/photo-1541643600914-78b084683601?w=400&q=80",
-  handwearShop: "https://images.unsplash.com/photo-1581244277943-fe4a9c777189?w=400&q=80",
-};
-
-const FALLBACK_IMG = "https://images.unsplash.com/photo-1542838132-92c53300491e?w=400&q=80";
 
 /* Three curated hero tiles — all point at real categories */
 const featureCards = [
@@ -75,7 +50,7 @@ export default function TrendingCategories() {
         </div>
 
         {/* Feature Cards */}
-        <div className="grid md:grid-cols-3 gap-6 mb-20">
+        <div className="grid md:grid-cols-3 gap-6">
           {featureCards.map((card, idx) => (
             <motion.div
               key={card.titleKey}
@@ -110,37 +85,6 @@ export default function TrendingCategories() {
           ))}
         </div>
 
-        {/* Divider */}
-        <div className="flex items-center gap-4 mb-12">
-          <div className="flex-1 rule" />
-          <span className="eyebrow text-stone-400">{t("allCategory")}</span>
-          <div className="flex-1 rule" />
-        </div>
-
-        {/* Real category grid */}
-        <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9 gap-3">
-          {megaCategories.map((cat) => (
-            <button
-              key={cat.titleKey}
-              onClick={() => goToCategory(cat.titleKey)}
-              className="flex flex-col items-center text-center gap-2.5 p-3 rounded-2xl hover:bg-white transition-colors group"
-            >
-              <div className="w-16 h-16 rounded-2xl overflow-hidden ring-2 ring-stone-200 group-hover:ring-honey-light group-hover:scale-105 transition-all shadow-sm">
-                <img
-                  src={CATEGORY_IMAGES[cat.titleKey] || FALLBACK_IMG}
-                  alt={t(cat.titleKey)}
-                  className="w-full h-full object-cover"
-                  onError={(e) => {
-                    (e.target as HTMLImageElement).src = FALLBACK_IMG;
-                  }}
-                />
-              </div>
-              <p className="text-[11.5px] font-semibold text-stone-500 group-hover:text-evergreen leading-tight transition-colors">
-                {t(cat.titleKey)}
-              </p>
-            </button>
-          ))}
-        </div>
       </div>
     </section>
   );
