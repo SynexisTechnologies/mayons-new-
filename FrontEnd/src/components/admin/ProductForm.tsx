@@ -3,6 +3,7 @@ import { productService } from "../../services/ProductServices";
 import { Product } from "../product/types";
 import { getAllcat, getSubcatByCategory, SubCategory } from "../../services/CategoryServices";
 import { Category } from "../../types/Category";
+import { imageUrl } from "../../utils/imageUrl";
 
 type Props = {
   fetchProducts: () => void;
@@ -29,6 +30,10 @@ export default function ProductForm({ fetchProducts, editingProduct, setEditingP
   const [formSuccess, setFormSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
+  // Selected file (the actual upload) + a local preview URL
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [imagePreview, setImagePreview] = useState("");
+
   useEffect(() => {
     getAllcat()
       .then(setDbCategories)
@@ -38,6 +43,32 @@ export default function ProductForm({ fetchProducts, editingProduct, setEditingP
   useEffect(() => {
     if (editingProduct) setForm(editingProduct);
   }, [editingProduct]);
+
+  // Build/revoke the object URL for the chosen file
+  useEffect(() => {
+    if (!imageFile) {
+      setImagePreview("");
+      return;
+    }
+    const url = URL.createObjectURL(imageFile);
+    setImagePreview(url);
+    return () => URL.revokeObjectURL(url);
+  }, [imageFile]);
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      setFormError("Image must be 5 MB or smaller.");
+      return;
+    }
+    setFormError("");
+    setImageFile(file);
+  };
+
+  // What to show in the preview: new file > existing saved image > nothing
+  const previewSrc = imagePreview || (form.image ? imageUrl(form.image) : "");
+  const hasImage = Boolean(imageFile) || Boolean(form.image);
 
   // Load subcategories when category changes
   useEffect(() => {
@@ -79,42 +110,48 @@ export default function ProductForm({ fetchProducts, editingProduct, setEditingP
       !form.category ||
       !form.descriptionEn?.trim() ||
       !form.descriptionSi?.trim() ||
-      !form.image?.trim()
+      !hasImage
     ) {
-      setFormError("Please fill all required fields (marked with *).");
+      setFormError("Please fill all required fields (marked with *), including a product image.");
       return;
     }
 
     try {
       setSubmitting(true);
-      const payload: Partial<Product> = {
-        pluNumber: form.pluNumber,
-        nameEn: form.nameEn,
-        nameSi: form.nameSi,
-        category: form.category,
-        subCategory: form.subCategory || undefined,
-        descriptionEn: form.descriptionEn,
-        descriptionSi: form.descriptionSi,
-        image: form.image,
-        unit: form.unit || undefined,
-        oldPrice: Number(form.oldPrice) || 0,
-        newPrice: Number(form.newPrice) || 0,
-        stock: Number(form.stock) || 0,
-        discount: form.discount ?? 0,
-        sizes: isClothing ? (form.sizes || []) : [],
-        colors: isClothing ? (form.colors || []) : [],
-        isActive: form.isActive ?? true,
-      };
+
+      const fd = new FormData();
+      fd.append("pluNumber", form.pluNumber);
+      fd.append("nameEn", form.nameEn);
+      fd.append("nameSi", form.nameSi);
+      fd.append("category", form.category);
+      if (form.subCategory) fd.append("subCategory", form.subCategory);
+      fd.append("descriptionEn", form.descriptionEn);
+      fd.append("descriptionSi", form.descriptionSi);
+      if (form.unit) fd.append("unit", form.unit);
+      fd.append("oldPrice", String(Number(form.oldPrice) || 0));
+      fd.append("newPrice", String(Number(form.newPrice) || 0));
+      fd.append("stock", String(Number(form.stock) || 0));
+      fd.append("sizes", JSON.stringify(isClothing ? form.sizes || [] : []));
+      fd.append("colors", JSON.stringify(isClothing ? form.colors || [] : []));
+      fd.append("isActive", String(form.isActive ?? true));
+
+      // New file → upload it; otherwise keep the existing image filename (edit case)
+      if (imageFile) {
+        fd.append("image", imageFile);
+      } else if (form.image) {
+        fd.append("image", form.image);
+      }
 
       if (editingProduct) {
-        await productService.update(editingProduct._id!, payload);
+        await productService.update(editingProduct._id!, fd);
         setEditingProduct(null);
       } else {
-        await productService.create(payload);
+        await productService.create(fd);
         setFormSuccess("Product created successfully!");
       }
 
       setForm(initial);
+      setImageFile(null);
       fetchProducts();
       setTimeout(onClose, 700);
     } catch (err: any) {
@@ -126,6 +163,7 @@ export default function ProductForm({ fetchProducts, editingProduct, setEditingP
 
   const handleCancel = () => {
     setForm(initial);
+    setImageFile(null);
     setEditingProduct(null);
     onClose();
   };
@@ -160,10 +198,26 @@ export default function ProductForm({ fetchProducts, editingProduct, setEditingP
                   className={F} placeholder="e.g. PLU-001" />
               </div>
 
-              <div>
-                <label className={L}>Image URL *</label>
-                <input type="text" value={form.image || ""} onChange={(e) => setForm({ ...form, image: e.target.value })}
-                  className={F} placeholder="https://..." />
+              <div className="md:col-span-2">
+                <label className={L}>Product Image *</label>
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 shrink-0 rounded-xl border border-gray-200 bg-white overflow-hidden flex items-center justify-center text-gray-300 text-xs">
+                    {previewSrc ? (
+                      <img src={previewSrc} alt="Preview" className="w-full h-full object-cover" />
+                    ) : (
+                      "No image"
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <label className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-white border border-gray-200 hover:border-[#1e3a5f] cursor-pointer text-sm font-semibold text-gray-700 transition">
+                      <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                      {hasImage ? "Change image" : "Upload image"}
+                    </label>
+                    <p className="text-xs text-gray-400 mt-1.5">
+                      {imageFile ? imageFile.name : "JPG, PNG, WEBP or GIF — up to 5 MB"}
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div>

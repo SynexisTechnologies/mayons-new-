@@ -1,6 +1,17 @@
 import { useState, useEffect, useRef } from "react";
-import type { ReactNode } from "react";
-import { ArrowRight, Sparkles, TrendingUp, Award, Leaf, ChevronLeft, ChevronRight } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  ArrowRight,
+  Sparkles,
+  TrendingUp,
+  Award,
+  Leaf,
+  ChevronLeft,
+  ChevronRight,
+  Truck,
+  ShieldCheck,
+  Sprout,
+} from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
 import SeasonalPage from "../pages/SeasonalPage";
@@ -41,104 +52,218 @@ export default function HomePage() {
 
   useEffect(() => {
     timerRef.current = setInterval(next, 6000);
-    return () => { if (timerRef.current) clearInterval(timerRef.current); };
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slide]);
+
+  const marqueeItems = [
+    t("featureOrganic"),
+    t("featurePrice"),
+    t("featureQuality"),
+    "Farm to Table",
+    "Eco Packaging",
+    "Island-wide Delivery",
+  ];
 
   return (
     <>
       {/* ═══════════════════════════ HERO ═══════════════════════════ */}
-      <section className="relative w-full h-screen overflow-hidden">
-
+      <section className="relative w-full h-screen min-h-[640px] overflow-hidden bg-evergreen">
         {/* Slides */}
         {heroImages.map((img, i) => (
-          <div key={i} className={`absolute inset-0 transition-opacity duration-700 ${slide === i ? "opacity-100 z-10" : "opacity-0 z-0"}`}>
-            <img src={img} className="absolute inset-0 w-full h-full object-cover scale-105 transition-transform duration-[12000ms]" alt="" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/70 via-black/40 to-black/20" />
+          <div
+            key={i}
+            className={`absolute inset-0 transition-opacity duration-[1200ms] ${
+              slide === i ? "opacity-100 z-10" : "opacity-0 z-0"
+            }`}
+          >
+            <img
+              src={img}
+              className={`absolute inset-0 w-full h-full object-cover transition-transform duration-[8000ms] ease-out ${
+                slide === i ? "scale-110" : "scale-100"
+              }`}
+              alt=""
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-ink/90 via-ink/55 to-ink/20" />
+            <div className="absolute inset-0 bg-gradient-to-t from-ink/80 via-transparent to-transparent" />
           </div>
         ))}
 
-        {/* Content — pushed below navbar */}
-        <div className="relative z-20 h-full flex flex-col items-center justify-center text-white text-center px-6 pt-[80px] md:pt-[130px] pb-16">
-
-          {/* Slide badge */}
-          <div className={`transition-all duration-500 ${transitioning ? "opacity-0 translate-y-2" : "opacity-100 translate-y-0"}`}>
-            <div className="inline-flex items-center gap-2 bg-[#d4af37]/20 backdrop-blur-sm border border-[#d4af37]/40 px-5 py-2 rounded-full mb-6">
-              <Sparkles className="w-4 h-4 text-[#d4af37]" />
-              <span className="text-[#d4af37] text-xs font-bold tracking-[0.2em] uppercase">
+        {/* Content — editorial left-aligned */}
+        <div className="relative z-20 h-full max-w-7xl mx-auto px-6 flex flex-col justify-center pt-[100px] md:pt-[122px]">
+          <div className="max-w-2xl text-white">
+            <motion.div
+              key={`badge-${slide}`}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: transitioning ? 0 : 1, y: transitioning ? 14 : 0 }}
+              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+              className="inline-flex items-center gap-2 glass-dark px-4 py-2 rounded-full mb-6"
+            >
+              <Sparkles className="w-4 h-4 text-honey-light" />
+              <span className="text-honey-light text-[11px] font-bold tracking-[0.22em] uppercase">
                 {heroSlides[slide].badge}
               </span>
-            </div>
-          </div>
+            </motion.div>
 
-          {/* Title */}
-          <div className={`transition-all duration-500 delay-75 ${transitioning ? "opacity-0 translate-y-3" : "opacity-100 translate-y-0"}`}>
-            <p className="text-white/60 text-sm font-medium tracking-wider uppercase mb-2">{t("heroTitlePrefix")}</p>
-            <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold leading-[1.05] tracking-tight mb-4">
-              <span className="bg-gradient-to-r from-white via-[#d4af37] to-[#f0d060] bg-clip-text text-transparent drop-shadow-lg">
+            <motion.p
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.05 }}
+              className="text-white/60 text-sm font-medium tracking-[0.2em] uppercase mb-3"
+            >
+              {t("heroTitlePrefix")}
+            </motion.p>
+
+            <motion.h1
+              initial={{ opacity: 0, y: 24 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              className="font-display text-5xl md:text-7xl lg:text-[5.2rem] font-semibold leading-[1.02] tracking-tight mb-5"
+            >
+              <span className="text-gradient-gold drop-shadow-sm">
                 {t("heroTitleHighlight")}
               </span>
-            </h1>
-            <p className="text-white/70 text-base md:text-lg max-w-2xl mx-auto leading-relaxed mb-8">
+            </motion.h1>
+
+            <motion.p
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.18 }}
+              className="text-white/75 text-base md:text-lg max-w-xl leading-relaxed mb-9 text-pretty"
+            >
               {t("heroDescription")}
-            </p>
-          </div>
+            </motion.p>
 
-          {/* CTAs */}
-          <div className={`flex flex-wrap justify-center gap-4 mb-10 transition-all duration-500 delay-150 ${transitioning ? "opacity-0 translate-y-3" : "opacity-100 translate-y-0"}`}>
-            <button
-              onClick={() => navigate("/products")}
-              className="flex items-center gap-2 px-8 py-3.5 bg-[#d4af37] text-[#1e3a5f] font-bold rounded-full hover:bg-[#e0c040] transition shadow-lg hover:shadow-[#d4af37]/30 hover:scale-105"
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.26 }}
+              className="flex flex-wrap gap-3.5 mb-12"
             >
-              {t("exploreMore")} <ArrowRight size={18} />
-            </button>
-            <button
-              onClick={() => navigate("/signup")}
-              className="px-8 py-3.5 border-2 border-white/40 text-white font-semibold rounded-full hover:bg-white/10 backdrop-blur-sm transition"
-            >
-              {t("register1")}
-            </button>
-          </div>
+              <button onClick={() => navigate("/products")} className="btn btn-accent text-base">
+                {t("exploreMore")} <ArrowRight size={18} />
+              </button>
+              <button onClick={() => navigate("/signup")} className="btn btn-light text-base">
+                {t("register1")}
+              </button>
+            </motion.div>
 
-          {/* Feature badges */}
-          <div className={`grid grid-cols-3 gap-3 max-w-sm mx-auto transition-all duration-500 delay-200 ${transitioning ? "opacity-0 translate-y-3" : "opacity-100 translate-y-0"}`}>
-            {[
-              { icon: <Leaf className="w-4 h-4" />, label: t("featureOrganic") },
-              { icon: <TrendingUp className="w-4 h-4" />, label: t("featurePrice") },
-              { icon: <Award className="w-4 h-4" />, label: t("featureQuality") },
-            ].map(({ icon, label }) => (
-              <div key={label} className="flex flex-col items-center gap-1.5 bg-white/10 backdrop-blur-sm rounded-xl p-3 border border-white/20">
-                <div className="text-[#d4af37]">{icon}</div>
-                <p className="text-[11px] font-semibold text-white/90 text-center leading-tight">{label}</p>
-              </div>
-            ))}
+            {/* Feature chips */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7, delay: 0.34 }}
+              className="flex flex-wrap gap-3 max-w-lg"
+            >
+              {[
+                { icon: <Sprout className="w-4 h-4" />, label: t("featureOrganic") },
+                { icon: <TrendingUp className="w-4 h-4" />, label: t("featurePrice") },
+                { icon: <Award className="w-4 h-4" />, label: t("featureQuality") },
+              ].map(({ icon, label }) => (
+                <div
+                  key={label}
+                  className="flex items-center gap-2 glass-dark rounded-full px-4 py-2.5"
+                >
+                  <span className="text-honey-light">{icon}</span>
+                  <p className="text-[12.5px] font-semibold text-white/90">{label}</p>
+                </div>
+              ))}
+            </motion.div>
           </div>
         </div>
 
-        {/* Prev/Next arrows */}
-        <button onClick={prev} className="absolute left-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm flex items-center justify-center text-white transition cursor-pointer">
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        <button onClick={next} className="absolute right-4 top-1/2 -translate-y-1/2 z-30 w-10 h-10 rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm flex items-center justify-center text-white transition cursor-pointer">
-          <ChevronRight className="w-5 h-5" />
-        </button>
-
-        {/* Dot indicators */}
-        <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-30 flex items-center gap-2">
+        {/* Vertical slide rail (desktop) */}
+        <div className="absolute right-8 top-1/2 -translate-y-1/2 z-30 hidden lg:flex flex-col items-end gap-4">
           {heroImages.map((_, i) => (
             <button
               key={i}
               onClick={() => goTo(i)}
-              className={`transition-all duration-300 rounded-full cursor-pointer ${
-                slide === i ? "w-8 h-2 bg-[#d4af37]" : "w-2 h-2 bg-white/40 hover:bg-white/70"
-              }`}
-            />
+              className="group flex items-center gap-3"
+            >
+              <span
+                className={`text-[11px] font-medium tracking-wide transition-all ${
+                  slide === i ? "text-honey-light opacity-100" : "text-white/40 opacity-0 group-hover:opacity-100"
+                }`}
+              >
+                {heroSlides[i].label}
+              </span>
+              <span
+                className={`block rounded-full transition-all duration-300 ${
+                  slide === i ? "w-2.5 h-8 bg-honey" : "w-2.5 h-2.5 bg-white/40 group-hover:bg-white/70"
+                }`}
+              />
+            </button>
           ))}
         </div>
 
-        {/* Slide label */}
-        <div className="absolute bottom-6 right-6 z-30 hidden md:flex items-center gap-2 text-white/60 text-xs font-medium">
-          <span className="w-4 h-px bg-white/40" />
-          {heroSlides[slide].label}
+        {/* Prev/Next */}
+        <div className="absolute bottom-8 left-6 z-30 flex items-center gap-3">
+          <button
+            onClick={prev}
+            className="w-11 h-11 rounded-full glass-dark flex items-center justify-center text-white hover:bg-white/20 transition"
+          >
+            <ChevronLeft className="w-5 h-5" />
+          </button>
+          <button
+            onClick={next}
+            className="w-11 h-11 rounded-full glass-dark flex items-center justify-center text-white hover:bg-white/20 transition"
+          >
+            <ChevronRight className="w-5 h-5" />
+          </button>
+        </div>
+      </section>
+
+      {/* ═══════════════════════ MARQUEE STRIP ═══════════════════════ */}
+      <div className="bg-evergreen text-white py-3.5 overflow-hidden border-y border-white/10">
+        <div className="flex w-max animate-marquee">
+          {[...marqueeItems, ...marqueeItems].map((item, i) => (
+            <span key={i} className="flex items-center gap-3 px-8 text-sm font-medium whitespace-nowrap">
+              <Leaf className="w-4 h-4 text-honey-light" />
+              {item}
+            </span>
+          ))}
+        </div>
+      </div>
+
+      {/* ═══════════════════════ VALUE PROPS ═══════════════════════ */}
+      <section className="bg-canvas py-14 border-b border-stone-200/70">
+        <div className="max-w-7xl mx-auto px-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          {[
+            {
+              icon: <Truck className="w-6 h-6" />,
+              title: "Island-wide Delivery",
+              text: "Fresh to your doorstep, Colombo same-day available.",
+            },
+            {
+              icon: <ShieldCheck className="w-6 h-6" />,
+              title: "Certified Organic",
+              text: "Every product meets international organic standards.",
+            },
+            {
+              icon: <Sprout className="w-6 h-6" />,
+              title: "Farm Direct",
+              text: "Sourced straight from trusted local farmers.",
+            },
+          ].map((f) => (
+            <motion.div
+              key={f.title}
+              initial={{ opacity: 0, y: 24 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: "-60px" }}
+              transition={{ duration: 0.5 }}
+              className="card hover-lift p-6 flex items-start gap-4"
+            >
+              <div className="w-12 h-12 rounded-2xl bg-mist text-evergreen flex items-center justify-center flex-shrink-0">
+                {f.icon}
+              </div>
+              <div>
+                <h3 className="font-display font-semibold text-lg text-ink mb-1">{f.title}</h3>
+                <p className="text-sm text-stone-500 leading-relaxed">{f.text}</p>
+              </div>
+            </motion.div>
+          ))}
         </div>
       </section>
 

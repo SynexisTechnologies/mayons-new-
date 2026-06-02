@@ -2,6 +2,7 @@ import { deleteProduct } from "../../services/AdminServices";
 import { Product } from "../product/types";
 import { useLanguage } from "../../context/LanguageContext";
 import { Pencil, Trash2 } from "lucide-react";
+import { imageUrl } from "../../utils/imageUrl";
 
 export default function ProductTable({ products, onEdit, refresh }: any) {
   const { t } = useLanguage();
@@ -32,7 +33,7 @@ export default function ProductTable({ products, onEdit, refresh }: any) {
             {products.map((p: Product) => (
               <tr key={p._id} className="hover:bg-slate-50/60 transition">
                 <td className="px-5 py-3">
-                  <img src={p.image} alt={p.nameEn} className="w-11 h-11 object-cover rounded-xl border border-slate-100" />
+                  <img src={imageUrl(p.image)} alt={p.nameEn} className="w-11 h-11 object-cover rounded-xl border border-slate-100" />
                 </td>
                 <td className="px-5 py-3 font-semibold text-[#1e3a5f] max-w-[180px] truncate">{p.nameEn}</td>
                 <td className="px-5 py-3 text-slate-500">{p.category}</td>

@@ -1,3 +1,4 @@
+import { Clock } from "lucide-react";
 import { Offer } from "../../data/offer";
 import ProductCard from "../product/ProductCard";
 
@@ -10,37 +11,35 @@ export default function OfferCard({ offer }: { offer: Offer }) {
     daysLeft = Math.ceil((end.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
   }
 
-  const typeColors: Record<string, string> = {
-    DISCOUNT: "bg-yellow-400 text-black",
-    LIMITED_TIME: "bg-purple-500 text-white",
-    SEASONAL: "bg-green-500 text-white",
-    CLEARANCE: "bg-red-500 text-white",
-    BOGO: "bg-blue-500 text-white",
-    DEFAULT: "bg-gray-400 text-white",
+  const typeClasses: Record<string, string> = {
+    DISCOUNT: "bg-honey text-white",
+    LIMITED_TIME: "bg-evergreen text-white",
+    SEASONAL: "bg-pine text-white",
+    CLEARANCE: "bg-clay text-white",
+    BOGO: "bg-forest text-white",
+    DEFAULT: "bg-stone-500 text-white",
   };
 
-  const typeClass = typeColors[offer.type] || typeColors.DEFAULT;
+  const typeClass = typeClasses[offer.type] || typeClasses.DEFAULT;
 
   return (
-    <div className="relative overflow-hidden rounded-2xl shadow hover:shadow-lg transition">
-      {/* Product card */}
-      <ProductCard product={offer.product} />
-
-      {/* Unique tilted offer badge */}
+    <div className="relative">
+      {/* Offer type badge */}
       <div
-        className={`absolute top-2 left-0 transform -translate-x-0.5 -translate-y-0.5 skew-x-[-20deg] px-4 py-1 text-[10px] font-semibold shadow ${typeClass} z-20`}
+        className={`absolute top-3 left-0 z-20 ${typeClass} pl-3 pr-3.5 py-1 text-[10px] font-bold tracking-wide uppercase rounded-r-full shadow-sm`}
       >
-        <span className="inline-block skew-x-[20deg]">
-          {offer.type.replace("_", " ")}
-        </span>
+        {offer.type.replace("_", " ")}
       </div>
 
-      {/* Limited time countdown */}
+      {/* Countdown for limited time */}
       {offer.type === "LIMITED_TIME" && (
-        <div className="absolute top-2 right-2 bg-black text-white px-2 py-1 text-xs rounded-full z-20">
-          {daysLeft > 0 ? `${daysLeft} days left` : "Expired"}
+        <div className="absolute top-3 right-12 z-20 flex items-center gap-1 bg-ink/85 backdrop-blur-sm text-white px-2.5 py-1 text-[10px] font-semibold rounded-full">
+          <Clock className="w-3 h-3" />
+          {daysLeft > 0 ? `${daysLeft}d left` : "Expired"}
         </div>
       )}
+
+      <ProductCard product={offer.product} />
     </div>
   );
 }

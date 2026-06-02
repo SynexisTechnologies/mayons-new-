@@ -1,7 +1,7 @@
 export const fetchFooterData = async () => {
   return Promise.resolve({
     company: {
-      name: "Organi",
+      name: "Mayons",
       description:
         "Fresh, organic, and sustainable products sourced directly from trusted farmers.",
     },
@@ -11,11 +11,10 @@ export const fetchFooterData = async () => {
     },
     contact: {
       address: "Client will provide official address",
-      phone: "+94 XX XXX XXXX",
-      email: "info@organi.com",
+      phone: "+94 70 244 2317",
+      email: "info@mayons.com",
     },
     social: ["facebook", "instagram", "twitter"],
-    copyright:
-      "© 2026 Organi. All rights reserved.",
+    copyright: "© 2026 Mayons. All rights reserved.",
   });
 };

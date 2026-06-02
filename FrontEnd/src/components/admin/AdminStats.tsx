@@ -68,15 +68,15 @@ export default function AdminStats() {
   return (
     <>
       <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold">Admin Summary</h3>
+        <h3 className="font-display text-xl font-semibold text-ink">Admin Summary</h3>
         <div className="flex items-center gap-3">
           <input
             type="date"
             value={selectedDate}
             onChange={(e) => setSelectedDate(e.target.value)}
-            className="border rounded px-2 py-1"
+            className="bg-white border border-stone-200 rounded-xl px-3 py-2 text-sm outline-none focus:border-evergreen"
           />
-          <div className="text-sm text-gray-500 flex items-center gap-2">
+          <div className="text-sm text-stone-400 flex items-center gap-2">
             <Clock className="w-4 h-4" />
             <span>{lastUpdated ? lastUpdated.toLocaleTimeString() : "-"}</span>
           </div>
@@ -102,21 +102,21 @@ export default function AdminStats() {
 
 function Card({ title, value, icon }: any) {
   return (
-    <div className="bg-white p-5 rounded-2xl border border-slate-100 shadow-sm flex items-center justify-between hover:shadow-md transition">
+    <div className="card p-5 flex items-center justify-between hover:shadow-md transition">
       <div>
-        <p className="text-slate-400 text-xs font-semibold uppercase tracking-wide mb-1">{title}</p>
-        <h2 className="text-2xl font-extrabold text-[#1e3a5f]">{value}</h2>
+        <p className="text-stone-400 text-xs font-semibold uppercase tracking-wide mb-1">{title}</p>
+        <h2 className="font-display text-3xl font-bold text-evergreen">{value}</h2>
       </div>
-      <div className="w-11 h-11 rounded-xl bg-[#1e3a5f]/8 flex items-center justify-center text-[#d4af37]">{icon}</div>
+      <div className="w-11 h-11 rounded-2xl bg-mist flex items-center justify-center text-evergreen">{icon}</div>
     </div>
   );
 }
 
 function SalesCard({ label, value }: any) {
   return (
-    <div className="bg-[#1e3a5f] text-white p-5 rounded-2xl shadow-sm hover:shadow-md transition">
+    <div className="bg-evergreen text-white p-5 rounded-2xl shadow-sm hover:shadow-md transition">
       <p className="text-white/50 text-xs font-semibold uppercase tracking-wide mb-1">{label} Sales</p>
-      <h2 className="text-xl font-extrabold text-[#d4af37]">Rs {value || 0}</h2>
+      <h2 className="font-display text-2xl font-bold text-honey-light">Rs {value || 0}</h2>
     </div>
   );
 }

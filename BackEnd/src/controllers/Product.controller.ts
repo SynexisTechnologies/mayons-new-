@@ -1,5 +1,7 @@
 import { Request, Response, NextFunction } from "express";
 import mongoose from "mongoose";
+import fs from "fs";
+import path from "path";
 import ProductModel from "../models/ProductModel";
 import { APIError } from "../errors/ApiErrors";
 import CategoryModel from "../models/CategoryModel";
@@ -9,6 +11,30 @@ import SubCategoryModel from "../models/SubCategory";
 const calculateDiscount = (oldPrice: number, newPrice: number) => {
   if (!oldPrice || !newPrice || newPrice >= oldPrice) return 0;
   return Math.round(((oldPrice - newPrice) / oldPrice) * 100);
+};
+
+// Helper: coerce a multipart text field (or JSON array) into a string[]
+const parseList = (val: unknown): string[] => {
+  if (Array.isArray(val)) return val.map(String).map((s) => s.trim()).filter(Boolean);
+  if (typeof val === "string" && val.trim()) {
+    try {
+      const parsed = JSON.parse(val);
+      if (Array.isArray(parsed)) return parsed.map(String).map((s) => s.trim()).filter(Boolean);
+    } catch {
+      /* not JSON — fall back to comma split */
+    }
+    return val.split(",").map((s) => s.trim()).filter(Boolean);
+  }
+  return [];
+};
+
+// Helper: delete an uploaded file from /uploads (ignores remote URLs & missing files)
+const removeUpload = (image?: string) => {
+  if (!image || /^https?:\/\//i.test(image)) return;
+  const filename = image.replace(/^\/?uploads\//, "");
+  fs.promises
+    .unlink(path.join("uploads", filename))
+    .catch(() => {/* already gone — ignore */});
 };
 
 // Helper: format product response
@@ -54,7 +80,6 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
       subCategory, // user can give subcategory name
       descriptionEn,
       descriptionSi,
-      image,
       unit,
       oldPrice,
       newPrice,
@@ -66,12 +91,19 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
       stock,
     } = req.body;
 
+    // Image comes from the uploaded file; fall back to a URL string for back-compat
+    const image = req.file ? req.file.filename : req.body.image;
+
     if (!pluNumber || !nameEn || !nameSi || !category || !descriptionEn || !descriptionSi || !image) {
+      if (req.file) removeUpload(req.file.filename);
       return res.status(400).json({ message: "Required fields missing" });
     }
 
     const exists = await ProductModel.findOne({ pluNumber });
-    if (exists) return res.status(409).json({ message: "Product already exists" });
+    if (exists) {
+      if (req.file) removeUpload(req.file.filename);
+      return res.status(409).json({ message: "Product already exists" });
+    }
 
     // Match category by name (case-insensitive) OR titleKey
     const categoryDoc = await CategoryModel.findOne({
@@ -80,7 +112,10 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
         { name: { $regex: new RegExp(`^${category}$`, "i") } },
       ],
     });
-    if (!categoryDoc) return res.status(400).json({ message: "Invalid category" });
+    if (!categoryDoc) {
+      if (req.file) removeUpload(req.file.filename);
+      return res.status(400).json({ message: "Invalid category" });
+    }
 
     let subCategoryDoc = null;
     if (subCategory) {
@@ -93,8 +128,14 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
         ],
       });
 
-      if (!subCategoryDoc) return res.status(400).json({ message: "Invalid SubCategory" });
+      if (!subCategoryDoc) {
+        if (req.file) removeUpload(req.file.filename);
+        return res.status(400).json({ message: "Invalid SubCategory" });
+      }
     }
+
+    const oldP = Number(oldPrice) || 0;
+    const newP = Number(newPrice) || 0;
 
     const product = await ProductModel.create({
       pluNumber,
@@ -106,15 +147,15 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
       descriptionSi,
       image,
       unit,
-      oldPrice,
-      newPrice,
-      discount: calculateDiscount(oldPrice, newPrice),
-      rating: rating || 0,
-      reviews: reviews || 0,
-      sizes: sizes || [],
-      colors: colors || [],
-      isActive: isActive ?? true,
-      stock: stock ?? 0, 
+      oldPrice: oldP,
+      newPrice: newP,
+      discount: calculateDiscount(oldP, newP),
+      rating: Number(rating) || 0,
+      reviews: Number(reviews) || 0,
+      sizes: parseList(sizes),
+      colors: parseList(colors),
+      isActive: isActive === undefined ? true : isActive !== "false" && isActive !== false,
+      stock: Number(stock) || 0,
     });
 
     res.status(201).json(formatProduct(product.toObject()));
@@ -165,16 +206,76 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
 // Update product
 export const updateProduct = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const { id } = req.params;
+    const id = req.params.id as string;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      if (req.file) removeUpload(req.file.filename);
+      throw new APIError(400, "Invalid product ID");
+    }
 
-    const updated = await ProductModel.findByIdAndUpdate(
-      id,
-      req.body,
-      { new: true }
-    );
+    const existing = await ProductModel.findById(id);
+    if (!existing) {
+      if (req.file) removeUpload(req.file.filename);
+      throw new APIError(404, "Product not found");
+    }
 
+    const updateData: Record<string, any> = { ...req.body };
+
+    // Resolve category / subCategory names → ObjectIds when provided
+    if (updateData.category) {
+      const categoryDoc = await CategoryModel.findOne({
+        $or: [
+          { titleKey: String(updateData.category).toLowerCase() },
+          { name: { $regex: new RegExp(`^${updateData.category}$`, "i") } },
+        ],
+      });
+      if (!categoryDoc) {
+        if (req.file) removeUpload(req.file.filename);
+        return res.status(400).json({ message: "Invalid category" });
+      }
+      updateData.category = categoryDoc._id;
+
+      if (updateData.subCategory) {
+        const subDoc = await SubCategoryModel.findOne({
+          category: categoryDoc._id,
+          $or: [
+            { titleKey: String(updateData.subCategory).toLowerCase() },
+            { name: { $regex: new RegExp(`^${updateData.subCategory}$`, "i") } },
+          ],
+        });
+        if (!subDoc) {
+          if (req.file) removeUpload(req.file.filename);
+          return res.status(400).json({ message: "Invalid SubCategory" });
+        }
+        updateData.subCategory = subDoc._id;
+      }
+    }
+
+    // Numbers / arrays come in as strings over multipart — coerce them
+    if (updateData.oldPrice !== undefined) updateData.oldPrice = Number(updateData.oldPrice) || 0;
+    if (updateData.newPrice !== undefined) updateData.newPrice = Number(updateData.newPrice) || 0;
+    if (updateData.stock !== undefined) updateData.stock = Number(updateData.stock) || 0;
+    if (updateData.sizes !== undefined) updateData.sizes = parseList(updateData.sizes);
+    if (updateData.colors !== undefined) updateData.colors = parseList(updateData.colors);
+    if (updateData.isActive !== undefined)
+      updateData.isActive = updateData.isActive !== "false" && updateData.isActive !== false;
+
+    if (updateData.oldPrice !== undefined && updateData.newPrice !== undefined) {
+      updateData.discount = calculateDiscount(updateData.oldPrice, updateData.newPrice);
+    }
+
+    // A new file replaces the stored image (and the old file on disk)
+    if (req.file) {
+      updateData.image = req.file.filename;
+      removeUpload(existing.image);
+    } else {
+      // No new upload — never overwrite the saved image with an empty value
+      delete updateData.image;
+    }
+
+    const updated = await ProductModel.findByIdAndUpdate(id, updateData, { new: true });
     res.json(updated);
   } catch (error) {
+    if (req.file) removeUpload(req.file.filename);
     next(error);
   }
 };
@@ -189,6 +290,7 @@ export const deleteProduct = async (req: Request, res: Response, next: NextFunct
     const deletedProduct = await ProductModel.findByIdAndDelete(id);
     if (!deletedProduct) throw new APIError(404, "Product not found");
 
+    removeUpload(deletedProduct.image);
     res.json({ message: "Product deleted successfully" });
   } catch (error) {
     next(error);

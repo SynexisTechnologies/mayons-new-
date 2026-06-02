@@ -14,34 +14,47 @@ export default function ContactFAQ() {
   ];
 
   return (
-    <section className="py-20 bg-white">
-      <div className="max-w-3xl mx-auto px-4">
-
-        {/* Header */}
+    <section className="py-20 md:py-24 bg-canvas">
+      <div className="max-w-3xl mx-auto px-6">
         <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-[#d4af37]/15 text-[#1e3a5f] px-4 py-1.5 rounded-full text-xs font-bold tracking-[0.15em] uppercase mb-4">
-            <HelpCircle className="w-3.5 h-3.5 text-[#d4af37]" />
-            FAQ
-          </div>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-[#1e3a5f] mb-3">{t("faqTitle")}</h2>
-          <p className="text-slate-400 text-sm">{t("faqSubtitle")}</p>
+          <p className="eyebrow text-honey justify-center mb-4">
+            <HelpCircle className="w-3.5 h-3.5" /> FAQ
+          </p>
+          <h2 className="font-display text-4xl md:text-5xl font-semibold text-ink mb-3">
+            {t("faqTitle")}
+          </h2>
+          <p className="text-stone-500 text-[15px]">{t("faqSubtitle")}</p>
         </div>
 
-        {/* Accordion */}
         <div className="space-y-3">
           {faqs.map((item, i) => (
-            <div key={i} className={`rounded-2xl border transition-all duration-200 overflow-hidden ${open === i ? "border-[#d4af37]/40 shadow-sm" : "border-slate-100"}`}>
+            <div
+              key={i}
+              className={`rounded-2xl border bg-white transition-all duration-200 overflow-hidden ${
+                open === i ? "border-honey/40 shadow-sm" : "border-stone-100"
+              }`}
+            >
               <button
                 onClick={() => setOpen(open === i ? null : i)}
-                className="w-full flex items-center justify-between px-6 py-4 text-left cursor-pointer hover:bg-slate-50 transition"
+                className="w-full flex items-center justify-between px-6 py-4 text-left hover:bg-mist/30 transition"
               >
-                <span className={`font-semibold text-sm ${open === i ? "text-[#1e3a5f]" : "text-slate-700"}`}>{item.q}</span>
-                <ChevronDown className={`w-4 h-4 flex-shrink-0 ml-4 text-[#d4af37] transition-transform duration-300 ${open === i ? "rotate-180" : ""}`} />
+                <span
+                  className={`font-semibold text-[15px] ${
+                    open === i ? "text-evergreen" : "text-ink"
+                  }`}
+                >
+                  {item.q}
+                </span>
+                <ChevronDown
+                  className={`w-4 h-4 flex-shrink-0 ml-4 text-honey transition-transform duration-300 ${
+                    open === i ? "rotate-180" : ""
+                  }`}
+                />
               </button>
               {open === i && (
                 <div className="px-6 pb-5">
-                  <div className="h-px bg-slate-100 mb-4" />
-                  <p className="text-slate-500 text-sm leading-relaxed">{item.a}</p>
+                  <div className="h-px bg-stone-100 mb-4" />
+                  <p className="text-stone-500 text-sm leading-relaxed">{item.a}</p>
                 </div>
               )}
             </div>

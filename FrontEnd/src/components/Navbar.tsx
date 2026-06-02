@@ -1,18 +1,23 @@
-                                                                                                                                                                                                                                                                                                                           import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ShoppingCart,
   User,
   Menu,
   X,
-  Leaf,
   Search,
+  Heart,
+  ChevronDown,
+  LogOut,
+  LayoutGrid,
 } from "lucide-react";
 import { NavLink, useNavigate } from "react-router-dom";
 import { useCart } from "../context/CartContext";
 import CartDrawer from "./CartDrawer";
+import Logo from "./Logo";
 import { useLanguage } from "../context/LanguageContext";
 import { navLinks } from "../data/data";
 import { useAuth } from "../context/AuthContext";
+import { useFavorites } from "../context/FavoriteContext";
 import { getAllcat } from "../services/CategoryServices";
 import { productService } from "../services/ProductServices";
 import { Product } from "../components/product/types";
@@ -25,9 +30,10 @@ export default function Navbar() {
   const [isMobileCategoryOpen, setIsMobileCategoryOpen] = useState(false);
   const categoryCloseTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [showSearchOverlay, setShowSearchOverlay] = useState(false);
-  const [showUserMenu, setShowUserMenu] = useState(false);
+  const [, setShowSearchOverlay] = useState(false);
+  const [, setShowUserMenu] = useState(false);
   const { items } = useCart();
+  const { favorites } = useFavorites();
   const navigate = useNavigate();
   const { language, setLanguage, t } = useLanguage();
   const { user, logout } = useAuth();
@@ -39,21 +45,18 @@ export default function Navbar() {
   const [dbCategories, setDbCategories] = useState<any[]>([]);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
 
-const toggleCategory = (key: string) => {
-  setExpandedCategories((prev) => ({
-    ...prev,
-    [key]: !prev[key],
-  }));
-};
+  const toggleCategory = (key: string) => {
+    setExpandedCategories((prev) => ({ ...prev, [key]: !prev[key] }));
+  };
 
-const openCategoryMenu = () => {
-  if (categoryCloseTimer.current) clearTimeout(categoryCloseTimer.current);
-  setIsCategoryOpen(true);
-};
+  const openCategoryMenu = () => {
+    if (categoryCloseTimer.current) clearTimeout(categoryCloseTimer.current);
+    setIsCategoryOpen(true);
+  };
 
-const closeCategoryMenu = () => {
-  categoryCloseTimer.current = setTimeout(() => setIsCategoryOpen(false), 150);
-};
+  const closeCategoryMenu = () => {
+    categoryCloseTimer.current = setTimeout(() => setIsCategoryOpen(false), 150);
+  };
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -68,10 +71,13 @@ const closeCategoryMenu = () => {
     const fetchCategories = async () => {
       try {
         const cats = await getAllcat();
-        // Sort by createdAt ascending to preserve the seeded order
-        setDbCategories([...cats].sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()));
+        setDbCategories(
+          [...cats].sort(
+            (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
+          )
+        );
       } catch {
-        // silently fall back to empty — the UI degrades gracefully
+        /* degrade gracefully */
       }
     };
 
@@ -90,7 +96,6 @@ const closeCategoryMenu = () => {
     logout();
   };
 
-  // close overlays on Escape
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") {
@@ -102,467 +107,562 @@ const closeCategoryMenu = () => {
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, []);
-  
-const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  const value = e.target.value;
-  const query = value.trim().toLowerCase();
 
-  setSearchQuery(value);
+  const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    const query = value.trim().toLowerCase();
+    setSearchQuery(value);
 
-  if (!query) {
-    setFilteredProducts([]);
-    setFilteredSuggestions([]);
-    return;
-  }
+    if (!query) {
+      setFilteredProducts([]);
+      setFilteredSuggestions([]);
+      return;
+    }
 
-  const matchedProducts = allProducts.filter((product) => {
-    const name =
-      language === "si"
-        ? (product.nameSi || "").toLowerCase()
-        : (product.nameEn || "").toLowerCase();
-
-    const category = (
-      typeof product.category === "string"
-        ? product.category
-        : (product.category as any)?.name || ""
-    ).toLowerCase();
-
-    const subCategory = (
-      typeof product.subCategory === "string"
-        ? product.subCategory
-        : (product.subCategory as any)?.name || ""
-    ).toLowerCase();
-
-    return (
-      name.includes(query) ||
-      category.includes(query) ||
-      subCategory.includes(query)
-    );
-  });
-
-  // Build suggestions: unique products, plus any matching category/subcategory labels
-  const suggestions: { type: "product" | "category" | "subcategory"; label: string; value: string }[] = [];
-
-  matchedProducts.slice(0, 6).forEach((p) => {
-    suggestions.push({
-      type: "product",
-      label: language === "si" ? p.nameSi || p.nameEn : p.nameEn || p.nameSi,
-      value: language === "si" ? p.nameSi || p.nameEn : p.nameEn || p.nameSi,
+    const matchedProducts = allProducts.filter((product) => {
+      const name =
+        language === "si"
+          ? (product.nameSi || "").toLowerCase()
+          : (product.nameEn || "").toLowerCase();
+      const category = (
+        typeof product.category === "string"
+          ? product.category
+          : (product.category as any)?.name || ""
+      ).toLowerCase();
+      const subCategory = (
+        typeof product.subCategory === "string"
+          ? product.subCategory
+          : (product.subCategory as any)?.name || ""
+      ).toLowerCase();
+      return (
+        name.includes(query) || category.includes(query) || subCategory.includes(query)
+      );
     });
-  });
 
-  // categories from DB and their items
-dbCategories.forEach((group: any) => {
-  group.items?.forEach((sub: any) => {
-    if (typeof sub === "string") {
-      const lbl = t(sub).toLowerCase();
-      if (lbl.includes(query) && !suggestions.find((s) => s.value === sub)) {
-        suggestions.push({ type: "subcategory", label: t(sub), value: sub });
-      }
-    } else if (typeof sub === "object" && sub.titleKey) {
-      sub.items?.forEach((inner: any) => {
-        if (typeof inner === "string") {
-          const lbl = t(inner).toLowerCase();
-          if (lbl.includes(query) && !suggestions.find((s) => s.value === inner)) {
-            suggestions.push({ type: "subcategory", label: t(inner), value: inner });
+    const suggestions: {
+      type: "product" | "category" | "subcategory";
+      label: string;
+      value: string;
+    }[] = [];
+
+    matchedProducts.slice(0, 6).forEach((p) => {
+      suggestions.push({
+        type: "product",
+        label: language === "si" ? p.nameSi || p.nameEn : p.nameEn || p.nameSi,
+        value: language === "si" ? p.nameSi || p.nameEn : p.nameEn || p.nameSi,
+      });
+    });
+
+    dbCategories.forEach((group: any) => {
+      group.items?.forEach((sub: any) => {
+        if (typeof sub === "string") {
+          const lbl = t(sub).toLowerCase();
+          if (lbl.includes(query) && !suggestions.find((s) => s.value === sub)) {
+            suggestions.push({ type: "subcategory", label: t(sub), value: sub });
           }
+        } else if (typeof sub === "object" && sub.titleKey) {
+          sub.items?.forEach((inner: any) => {
+            if (typeof inner === "string") {
+              const lbl = t(inner).toLowerCase();
+              if (lbl.includes(query) && !suggestions.find((s) => s.value === inner)) {
+                suggestions.push({ type: "subcategory", label: t(inner), value: inner });
+              }
+            }
+          });
         }
       });
+    });
+
+    setFilteredProducts(matchedProducts.slice(0, 20));
+    setFilteredSuggestions(suggestions);
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setFilteredProducts([]);
+    setFilteredSuggestions([]);
+  };
+
+  const goToSuggestion = (s: { type: string; value: string }) => {
+    if (s.type === "product") {
+      navigate(`/products?search=${encodeURIComponent(s.value)}`);
+    } else {
+      navigate(`/products?category=${encodeURIComponent(s.value)}`);
     }
-  });
-});
+    clearSearch();
+    setIsMobileMenuOpen(false);
+  };
 
-  setFilteredProducts(matchedProducts.slice(0, 20));
-  setFilteredSuggestions(suggestions);
-};
+  const renderCategory = (
+    item: string | { titleKey: string; items?: any[] },
+    level: number = 0
+  ) => {
+    if (typeof item === "string") {
+      return (
+        <li key={item}>
+          <button
+            onClick={() => {
+              navigate(`/products?category=${item}`);
+              setIsCategoryOpen(false);
+              setIsMobileMenuOpen(false);
+              setIsMobileCategoryOpen(false);
+            }}
+            className="w-full text-left px-3 py-1.5 rounded-lg text-[12.5px] text-stone-500 hover:text-evergreen hover:bg-mist/60 transition-colors font-medium"
+          >
+            {t(item)}
+          </button>
+        </li>
+      );
+    }
 
-const renderCategory = (
-  item: string | { titleKey: string; items?: any[] },
-  level: number = 0
-) => {
-  if (typeof item === "string") {
+    const hasChildren = item.items && item.items.length > 0;
+    const isOpen = expandedCategories[item.titleKey];
+
     return (
-      <li key={item}>
+      <li key={item.titleKey}>
         <button
+          className="w-full text-left flex justify-between items-center px-3 py-1.5 rounded-lg text-[12.5px] text-ink hover:text-evergreen hover:bg-mist/60 transition-colors font-semibold"
           onClick={() => {
-            navigate(`/products?category=${item}`);
-            setIsCategoryOpen(false);
-            setIsMobileMenuOpen(false);
-            setIsMobileCategoryOpen(false);
+            if (hasChildren) {
+              toggleCategory(item.titleKey);
+            } else {
+              navigate(`/products?category=${item.titleKey.toLowerCase()}`);
+              setIsCategoryOpen(false);
+              setIsMobileMenuOpen(false);
+              setIsMobileCategoryOpen(false);
+            }
           }}
-          className="w-full text-left px-2 py-1.5 rounded-lg text-[12px] text-slate-600 hover:text-[#1e3a5f] hover:bg-[#1e3a5f]/5 transition-colors font-medium"
         >
-          {t(item)}
+          <span>{t(item.titleKey)}</span>
+          {hasChildren && (
+            <ChevronDown
+              className={`w-3.5 h-3.5 text-stone-400 transition-transform ${
+                isOpen ? "rotate-180" : ""
+              }`}
+            />
+          )}
         </button>
+        {hasChildren && isOpen && (
+          <ul className="ml-2 space-y-0.5 border-l border-honey/25 pl-2">
+            {item.items!.map((sub) => renderCategory(sub, level + 1))}
+          </ul>
+        )}
       </li>
     );
-  }
+  };
 
-  const hasChildren = item.items && item.items.length > 0;
-  const isOpen = expandedCategories[item.titleKey];
-
-  return (
-    <li key={item.titleKey}>
-      <button
-        className="w-full text-left flex justify-between items-center px-2 py-1.5 rounded-lg text-[12px] text-slate-700 hover:text-[#1e3a5f] hover:bg-[#1e3a5f]/5 transition-colors font-semibold"
-        onClick={() => {
-          if (hasChildren) {
-            toggleCategory(item.titleKey);
-          } else {
-            navigate(`/products?category=${item.titleKey.toLowerCase()}`);
-            setIsCategoryOpen(false);
-            setIsMobileMenuOpen(false);
-            setIsMobileCategoryOpen(false);
-          }
-        }}
-      >
-        <span>{t(item.titleKey)}</span>
-        {hasChildren && (
-          <span className={`text-[10px] text-slate-400 transition-transform ${isOpen ? "rotate-90" : ""}`}>▶</span>
-        )}
-      </button>
-      {hasChildren && isOpen && (
-        <ul className="ml-2 space-y-0.5 border-l border-[#d4af37]/20 pl-2">
-          {item.items!.map((sub) => renderCategory(sub, level + 1))}
-        </ul>
-      )}
-    </li>
-  );
-};
+  const cartCount = items.length;
 
   return (
     <nav
-      className={`fixed top-0 left-0 right-0 z-50 ${
-        isScrolled ? "shadow-[0_4px_10px_#1e3a5f4d]" : ""
+      className={`fixed top-0 left-0 right-0 z-50 transition-shadow duration-300 ${
+        isScrolled ? "shadow-[0_12px_34px_-18px_rgba(36,21,38,0.7)]" : ""
       }`}
-      style={{ backgroundColor: "#1e3a5f" }}
     >
-      {/* ================= TOP BAR ================= */}
-      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between h-[72px]">
-        <NavLink to="/" className="flex items-center gap-2 text-white">
-          <div className="w-10 h-10 bg-[#d4af37] rounded-full flex items-center justify-center">
-            <Leaf className="text-[#1e3a5f]" />
-          </div>
-          <div>
-            <h1 className="font-bold text-lg">Organi</h1>
-            <p className="text-xs tracking-widest">FRESH PRODUCT</p>
-          </div>
-        </NavLink>
+      {/* ================= TOP BAR (purple) ================= */}
+      <div className="bg-evergreen text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 h-[70px] flex items-center gap-4">
+          <NavLink to="/" aria-label="Mayons home" className="group">
+            <Logo height={46} width={132} className="transition-transform group-hover:scale-[1.03]" />
+          </NavLink>
 
-        {/* Search */}
-<div className="hidden md:flex flex-1 mx-6 relative">
-  <input
-    placeholder={t("search")}
-    value={searchQuery}
-    onChange={handleSearchChange}
-    className="hidden md:block w-full rounded-full px-5 py-2 outline-none bg-white/20 text-white placeholder-white"
-  />
-  <Search
-   className="hidden md:block absolute right-4 top-2.5 text-white w-5 cursor-pointer"
-    onClick={() => navigate(`/products?search=${searchQuery}`)}
-  />
-
-  {filteredProducts.length > 0 && (
-      <ul className="absolute top-full mt-1 w-full bg-white text-black rounded shadow-lg max-h-64 overflow-y-auto z-50">
-        {filteredSuggestions.map((s, idx) => (
-          <li
-            key={idx + "-sugg"}
-            onClick={() => {
-              if (s.type === "product") {
-                navigate(`/products?search=${encodeURIComponent(s.value)}`);
-              } else if (s.type === "subcategory") {
-                navigate(`/products?category=${encodeURIComponent(s.value)}`);
-              } else {
-                navigate(`/products?category=${encodeURIComponent(s.value)}`);
-              }
-
-              setSearchQuery("");
-              setFilteredProducts([]);
-              setFilteredSuggestions([]);
-            }}
-            className="px-4 py-2 cursor-pointer hover:bg-gray-200 flex justify-between items-center"
-          >
-            <span>{s.label}</span>
-            <span className="text-xs text-gray-400">{s.type}</span>
-          </li>
-        ))}
-      </ul>
-  )}
-</div>
-
-
-        {/* Language */}
-        <select
-          value={language}
-          onChange={(e) => setLanguage(e.target.value as "en" | "si")}
-  className="hidden md:block bg-transparent border border-[#d4af37] text-white rounded px-2 py-1 mr-4"
-        >
-          <option value="en" className="text-black">EN</option>
-          <option value="si" className="text-black">සිං</option>
-        </select>
-
-{user ? (
-  <div className="flex items-center gap-4 mr-4 text-white">
-
-    {/* Avatar + Name */}
-    <div className="flex items-center gap-3 bg-white/10 px-3 py-1.5 rounded-full">
-      <div className="w-8 h-8 rounded-full bg-[#d4af37] flex items-center justify-center text-[#1e3a5f] text-sm font-semibold">
-        {user.firstName.charAt(0)}
-      </div>
-
-      <div className="leading-tight hidden sm:block">
-        <p className="text-sm font-medium">
-          {user.firstName} {user.lastName}
-        </p>
-        <span className="text-[10px] uppercase tracking-wide text-[#d4af37]">
-          {user.role}
-        </span>
-      </div>
-    </div>
-
-    {/* Logout Button */}
-    <button
-      onClick={handleLogout}
-      className="flex items-center gap-1 px-3 py-1.5 rounded-full 
-                 border border-red-400 text-red-400 text-xs font-medium
-                 hover:bg-red-500 hover:text-white hover:border-red-500
-                 transition-all duration-200"
-    >
-      <X size={14} />
-      {t("logout")}
-    </button>
-
-  </div>
-) : (
-  <button
-    onClick={() => navigate("/login")}
-    className="text-white mr-4"
-  >
-    <User />
-  </button>
-)}
-        <button
-          onClick={() => setIsCartOpen(true)}
-          className="relative text-white mr-4"
-        >
-          <ShoppingCart />
-          {items.length > 0 && (
-            <span className="absolute -top-2 -right-2 bg-[#d4af37] text-[#1e3a5f] text-xs w-5 h-5 rounded-full flex items-center justify-center">
-              {items.length}
-            </span>
-          )}
-        </button>
-
-        <button
-          className="md:hidden text-white"
-          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        >
-          {isMobileMenuOpen ? <X /> : <Menu />}
-        </button>
-      </div>
-<div className="bg-white hidden md:block"> 
-  <div className="max-w-7xl mx-auto px-4 py-3 flex items-center relative">
-<div
-  className="relative font-medium text-[#1e3a5f]"
-  onMouseEnter={openCategoryMenu}
-  onMouseLeave={closeCategoryMenu}
->
-  <span className="cursor-pointer hover:text-[#2a4a7c] select-none">
-    ☰ {t("allCategory")}
-  </span>
-
-  {isCategoryOpen && (
-  <div
-    className="absolute left-0 top-full mt-2 bg-white shadow-2xl border border-slate-100 rounded-2xl w-[320px] z-50 overflow-hidden"
-    onMouseEnter={openCategoryMenu}
-    onMouseLeave={closeCategoryMenu}
-  >
-    <div className="px-3 py-2 border-b border-slate-100 bg-slate-50/80">
-      <p className="text-[11px] font-bold uppercase tracking-widest text-slate-400">Browse by Category</p>
-    </div>
-
-    <div className="max-h-[65vh] overflow-y-auto scrollbar-hide p-2">
-      <ul className="space-y-0.5">
-        {dbCategories.map((group) => (
-          <li key={group.titleKey}>
-            <div
-              className="flex justify-between items-center px-3 py-2 rounded-xl cursor-pointer text-[#1e3a5f] font-semibold text-[13px] hover:bg-[#1e3a5f]/5 hover:text-[#1e3a5f] transition-colors"
-              onClick={() => {
-                if (group.items?.length) {
-                  toggleCategory(group.titleKey);
-                } else {
-                  navigate(`/products?category=${group.titleKey.toLowerCase()}`);
-                  setIsCategoryOpen(false);
-                  setIsMobileMenuOpen(false);
-                }
-              }}
-            >
-              <span>{language === "si" ? t(group.titleKey) : (group.name || t(group.titleKey))}</span>
-              {group.items?.length ? (
-                <span className={`text-[10px] text-slate-400 transition-transform ${expandedCategories[group.titleKey] ? "rotate-90" : ""}`}>▶</span>
-              ) : null}
+          {/* Desktop search */}
+          <div className="hidden md:flex flex-1 max-w-xl mx-auto relative">
+            <div className="flex items-center w-full bg-white/15 hover:bg-white/20 focus-within:bg-white/25 border border-white/20 rounded-full pl-5 pr-2 py-1.5 transition">
+              <Search className="w-4 h-4 text-white/70 shrink-0" />
+              <input
+                placeholder={t("search")}
+                value={searchQuery}
+                onChange={handleSearchChange}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter")
+                    navigate(`/products?search=${encodeURIComponent(searchQuery)}`);
+                }}
+                className="w-full bg-transparent px-3 py-1 outline-none text-sm text-white placeholder-white/60"
+              />
+              {searchQuery && (
+                <button
+                  onClick={clearSearch}
+                  className="w-7 h-7 rounded-full hover:bg-white/20 flex items-center justify-center text-white/80 transition"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
 
-            {expandedCategories[group.titleKey] && group.items && (
-              <ul className="ml-2 mb-1 space-y-0.5 border-l-2 border-[#d4af37]/30 pl-3">
-                {group.items.map((item: any) => renderCategory(item, 1))}
+            {filteredProducts.length > 0 && (
+              <ul
+                data-lenis-prevent
+                className="absolute top-full mt-2 w-full bg-white border border-stone-100 rounded-2xl shadow-[0_24px_60px_-24px_rgba(36,21,38,0.45)] max-h-80 overflow-y-auto scrollbar-hide z-50 p-1.5 animate-slideDown"
+              >
+                {filteredSuggestions.map((s, idx) => (
+                  <li
+                    key={idx + "-sugg"}
+                    onClick={() => goToSuggestion(s)}
+                    className="px-3.5 py-2.5 cursor-pointer hover:bg-mist/60 rounded-xl flex justify-between items-center group"
+                  >
+                    <span className="flex items-center gap-2.5 text-sm text-ink">
+                      <Search className="w-3.5 h-3.5 text-stone-300 group-hover:text-evergreen transition" />
+                      {s.label}
+                    </span>
+                    <span className="text-[10px] uppercase tracking-wider text-stone-400 font-semibold">
+                      {s.type}
+                    </span>
+                  </li>
+                ))}
               </ul>
             )}
-          </li>
-        ))}
-      </ul>
-    </div>
-  </div>
-)}
-
-</div>
-
-          {/* Desktop Links */}
-          <div className="flex gap-10 justify-center flex-1 ml-10">
-  {navLinks
-    .filter((link) => !link.adminOnly || user?.role === "admin")
-    .map((link) => (
-
-              <NavLink
-                key={link.key}
-                to={link.href}
-                className={({ isActive }) =>
-                  isActive
-                    ? "text-[#1e3a5f] font-medium underline underline-offset-8 decoration-[#1e3a5f]"
-                    : "text-[#2a4a7c] hover:text-[#d4af37]"
-                }
-              >
-                {t(link.key)}
-              </NavLink>
-            ))}
-</div></div>
-
           </div>
-           {/* ================= MOBILE MENU ================= */}
-{isMobileMenuOpen && (
-  <div className="md:hidden fixed inset-x-0 top-[72px] bg-white shadow-xl border-t z-40 max-h-[calc(100vh-72px)] overflow-y-auto overscroll-contain">
-    <div className="flex flex-col p-4 gap-5">
 
-{/* Mobile Search */}
-<div className="relative">
-  <input
-    placeholder={t("search")}
-    value={searchQuery}
-    onChange={handleSearchChange}
-    className="w-full rounded-full px-4 py-2 outline-none border border-gray-300"
-  />
+          {/* Right cluster */}
+          <div className="flex items-center gap-1.5 sm:gap-2 ml-auto md:ml-0">
+            {/* Language */}
+            <div className="hidden sm:flex items-center bg-white/12 rounded-full p-0.5 text-xs font-semibold">
+              <button
+                onClick={() => setLanguage("en")}
+                className={`px-2.5 py-1 rounded-full transition ${
+                  language === "en" ? "bg-honey-light text-evergreen shadow-sm" : "text-white/80"
+                }`}
+              >
+                EN
+              </button>
+              <button
+                onClick={() => setLanguage("si")}
+                className={`px-2.5 py-1 rounded-full transition ${
+                  language === "si" ? "bg-honey-light text-evergreen shadow-sm" : "text-white/80"
+                }`}
+              >
+                සිං
+              </button>
+            </div>
 
-  {filteredProducts.length > 0 && (
-    <ul className="absolute left-0 right-0 top-full mt-2 w-full bg-white text-black rounded shadow-lg max-h-64 overflow-y-auto z-50">
-      {filteredSuggestions.map((s, idx) => (
-        <li
-          key={idx}
-  onClick={() => {
-  if (s.type === "product") {
-    navigate(`/products?search=${s.value}`);
-  } 
-  else if (s.type === "subcategory") {
-    navigate(`/products?category=${s.value}`);
-  } 
-  else {
-    navigate(`/products?category=${s.value}`);
-  }
+            {/* Favorites */}
+            <button
+              onClick={() => navigate("/favorites")}
+              aria-label="Favorites"
+              className="relative hidden sm:flex w-10 h-10 rounded-full hover:bg-white/12 items-center justify-center text-white transition"
+            >
+              <Heart className="w-[20px] h-[20px]" />
+              {favorites.length > 0 && (
+                <span className="absolute top-1 right-1 w-4 h-4 rounded-full bg-clay text-white text-[10px] font-bold flex items-center justify-center">
+                  {favorites.length}
+                </span>
+              )}
+            </button>
 
-  setSearchQuery("");
-  setFilteredProducts([]);
-  setFilteredSuggestions([]);
-  setIsMobileMenuOpen(false);
-}}
-          className="px-4 py-2 cursor-pointer hover:bg-gray-200 flex justify-between items-center"
-        >
-          <span>{s.label}</span>
-          <span className="text-xs text-gray-400">{s.type}</span>
-        </li>
-      ))}
-    </ul>
-  )}
-</div>
+            {/* Account */}
+            {user ? (
+              <div className="hidden sm:flex items-center gap-2 pl-1">
+                <div className="flex items-center gap-2 bg-white/12 pl-1 pr-3 py-1 rounded-full">
+                  <div className="w-8 h-8 rounded-full bg-honey-light text-evergreen flex items-center justify-center text-sm font-bold uppercase">
+                    {user.firstName?.charAt(0) || "U"}
+                  </div>
+                  <div className="leading-tight hidden lg:block">
+                    <p className="text-[13px] font-semibold text-white">{user.firstName}</p>
+                    <span className="text-[9px] uppercase tracking-wider text-honey-light font-bold">
+                      {user.role}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  aria-label={t("logout")}
+                  className="w-10 h-10 rounded-full hover:bg-white/12 text-white/80 hover:text-white flex items-center justify-center transition"
+                >
+                  <LogOut className="w-[18px] h-[18px]" />
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => navigate("/login")}
+                className="hidden sm:flex w-10 h-10 rounded-full hover:bg-white/12 items-center justify-center text-white transition"
+                aria-label="Account"
+              >
+                <User className="w-[20px] h-[20px]" />
+              </button>
+            )}
 
-      {/* Mobile Language Selector */}
-      <div className="flex gap-3">
-        <button
-          onClick={() => setLanguage("en")}
-          className={`px-3 py-1 rounded border ${
-            language === "en"
-              ? "bg-[#1e3a5f] text-white"
-              : "border-gray-300 text-gray-700"
-          }`}
-        >
-          EN
-        </button>
+            {/* Cart */}
+            <button
+              onClick={() => setIsCartOpen(true)}
+              aria-label="Cart"
+              className="relative w-10 h-10 rounded-full bg-honey-light text-evergreen flex items-center justify-center hover:bg-[#ffd93d] transition shadow-[0_8px_20px_-10px_rgba(0,0,0,0.6)]"
+            >
+              <ShoppingCart className="w-[19px] h-[19px]" />
+              {cartCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-clay text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-evergreen">
+                  {cartCount}
+                </span>
+              )}
+            </button>
 
-        <button
-          onClick={() => setLanguage("si")}
-          className={`px-3 py-1 rounded border ${
-            language === "si"
-              ? "bg-[#1e3a5f] text-white"
-              : "border-gray-300 text-gray-700"
-          }`}
-        >
-          සිං
-        </button>
+            {/* Mobile toggle */}
+            <button
+              className="md:hidden w-10 h-10 rounded-full hover:bg-white/12 flex items-center justify-center text-white transition"
+              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              aria-label="Menu"
+            >
+              {isMobileMenuOpen ? <X /> : <Menu />}
+            </button>
+          </div>
+        </div>
       </div>
 
-      {/* Mobile Categories */}
-      <button
-        onClick={() => setIsMobileCategoryOpen(!isMobileCategoryOpen)}
-        className="flex justify-between items-center font-semibold text-[#1e3a5f]"
-      >
-        ☰ {t("allCategory")}
-        <span>{isMobileCategoryOpen ? "−" : "+"}</span>
-      </button>
+      {/* ================= CATEGORY + LINKS BAR (desktop) ================= */}
+      <div className="hidden md:block bg-white border-b border-stone-200 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 h-[52px] flex items-center gap-8">
+          <div
+            className="relative h-full flex items-center"
+            onMouseEnter={openCategoryMenu}
+            onMouseLeave={closeCategoryMenu}
+          >
+            <button className="flex items-center gap-2 text-[13.5px] font-semibold text-white bg-evergreen px-4 py-2 rounded-full hover:bg-forest transition select-none">
+              <LayoutGrid className="w-4 h-4" />
+              {t("allCategory")}
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform ${
+                  isCategoryOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
 
-{isMobileCategoryOpen && (
-  <div className="space-y-1">
-    {dbCategories.map((group) => (
-      <div key={group.titleKey}>
-        <button
-          className="w-full text-left flex justify-between items-center px-3 py-2 rounded-xl text-[13px] font-bold text-[#1e3a5f] hover:bg-[#1e3a5f]/5 transition"
-          onClick={() => {
-            navigate(`/products?category=${group.titleKey.toLowerCase()}`);
-            setIsMobileMenuOpen(false);
-            setIsMobileCategoryOpen(false);
-          }}
+            {isCategoryOpen && (
+              <div
+                className="absolute left-0 top-full bg-white shadow-[0_30px_70px_-30px_rgba(36,21,38,0.5)] border border-stone-100 rounded-2xl w-[330px] z-50 overflow-hidden animate-slideDown"
+                onMouseEnter={openCategoryMenu}
+                onMouseLeave={closeCategoryMenu}
+              >
+                <div className="px-4 py-3 border-b border-stone-100 bg-cream/60">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-stone-400">
+                    Browse by Category
+                  </p>
+                </div>
+                <div data-lenis-prevent className="max-h-[65vh] overflow-y-auto scrollbar-hide p-2">
+                  <ul className="space-y-0.5">
+                    {dbCategories.map((group) => (
+                      <li key={group.titleKey}>
+                        <div
+                          className="flex justify-between items-center px-3 py-2 rounded-xl cursor-pointer text-evergreen font-semibold text-[13px] hover:bg-mist/60 transition-colors"
+                          onClick={() => {
+                            if (group.items?.length) {
+                              toggleCategory(group.titleKey);
+                            } else {
+                              navigate(`/products?category=${group.titleKey.toLowerCase()}`);
+                              setIsCategoryOpen(false);
+                              setIsMobileMenuOpen(false);
+                            }
+                          }}
+                        >
+                          <span>
+                            {language === "si"
+                              ? t(group.titleKey)
+                              : group.name || t(group.titleKey)}
+                          </span>
+                          {group.items?.length ? (
+                            <ChevronDown
+                              className={`w-3.5 h-3.5 text-stone-400 transition-transform ${
+                                expandedCategories[group.titleKey] ? "rotate-180" : ""
+                              }`}
+                            />
+                          ) : null}
+                        </div>
+                        {expandedCategories[group.titleKey] && group.items && (
+                          <ul className="ml-2 mb-1 space-y-0.5 border-l-2 border-honey/40 pl-3">
+                            {group.items.map((item: any) => renderCategory(item, 1))}
+                          </ul>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="flex items-center gap-7 flex-1">
+            {navLinks
+              .filter((link) => !link.adminOnly || user?.role === "admin")
+              .map((link) => (
+                <NavLink
+                  key={link.key}
+                  to={link.href}
+                  className={({ isActive }) =>
+                    `relative text-[13.5px] font-medium transition-colors py-1 ${
+                      isActive
+                        ? "text-evergreen after:absolute after:-bottom-0.5 after:left-0 after:right-0 after:h-0.5 after:rounded-full after:bg-honey-light"
+                        : "text-stone-500 hover:text-evergreen"
+                    }`
+                  }
+                >
+                  {t(link.key)}
+                </NavLink>
+              ))}
+          </div>
+        </div>
+      </div>
+
+      {/* ================= MOBILE MENU ================= */}
+      {isMobileMenuOpen && (
+        <div
+          data-lenis-prevent
+          className="md:hidden fixed inset-x-0 top-[70px] bg-canvas shadow-xl border-t border-stone-200 z-40 max-h-[calc(100vh-70px)] overflow-y-auto overscroll-contain animate-slideDown"
         >
-          {language === "si" ? t(group.titleKey) : (group.name || t(group.titleKey))}
-        </button>
-        {group.items && group.items.length > 0 && (
-          <ul className="ml-3 border-l-2 border-[#d4af37]/30 pl-3 space-y-0.5">
-            {group.items.map((item: any) => renderCategory(item))}
-          </ul>
-        )}
-      </div>
-    ))}
-  </div>
-)}
+          <div className="flex flex-col p-4 gap-5">
+            {/* Search */}
+            <div className="relative">
+              <div className="flex items-center bg-white border border-stone-200 rounded-full pl-4 pr-2 py-2">
+                <Search className="w-4 h-4 text-stone-400" />
+                <input
+                  placeholder={t("search")}
+                  value={searchQuery}
+                  onChange={handleSearchChange}
+                  className="w-full bg-transparent px-3 outline-none text-sm"
+                />
+              </div>
+              {filteredProducts.length > 0 && (
+                <ul className="absolute left-0 right-0 top-full mt-2 bg-white border border-stone-100 rounded-2xl shadow-xl max-h-64 overflow-y-auto z-50 p-1.5">
+                  {filteredSuggestions.map((s, idx) => (
+                    <li
+                      key={idx}
+                      onClick={() => goToSuggestion(s)}
+                      className="px-3 py-2.5 cursor-pointer hover:bg-mist/60 rounded-xl flex justify-between items-center"
+                    >
+                      <span className="text-sm text-ink">{s.label}</span>
+                      <span className="text-[10px] uppercase text-stone-400 font-semibold">
+                        {s.type}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
 
-      {/* Mobile Links */}
-      <div className="flex flex-col gap-3 border-t pt-4">
+            {/* Language */}
+            <div className="flex gap-2">
+              {(["en", "si"] as const).map((lng) => (
+                <button
+                  key={lng}
+                  onClick={() => setLanguage(lng)}
+                  className={`flex-1 py-2 rounded-xl text-sm font-semibold border transition ${
+                    language === lng
+                      ? "bg-evergreen text-white border-evergreen"
+                      : "border-stone-200 text-stone-600"
+                  }`}
+                >
+                  {lng === "en" ? "English" : "සිංහල"}
+                </button>
+              ))}
+            </div>
 
-       {navLinks
-  .filter((link) => !link.adminOnly || user?.role === "admin")
-  .map((link) => (
-    <NavLink
-      key={link.key}
-      to={link.href}
-      onClick={() => setIsMobileMenuOpen(false)}
-      className="text-[#1e3a5f] font-medium"
-    >
-      {t(link.key)}
-    </NavLink>
-))}
+            {/* Account row */}
+            {user ? (
+              <div className="flex items-center justify-between bg-white border border-stone-200 rounded-2xl p-3">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-evergreen text-honey-light flex items-center justify-center font-bold uppercase">
+                    {user.firstName?.charAt(0) || "U"}
+                  </div>
+                  <div className="leading-tight">
+                    <p className="text-sm font-semibold text-ink">
+                      {user.firstName} {user.lastName}
+                    </p>
+                    <span className="text-[10px] uppercase tracking-wider text-honey font-bold">
+                      {user.role}
+                    </span>
+                  </div>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-1.5 text-clay text-sm font-semibold px-3 py-1.5 rounded-full bg-clay-soft"
+                >
+                  <LogOut className="w-4 h-4" /> {t("logout")}
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={() => {
+                  navigate("/login");
+                  setIsMobileMenuOpen(false);
+                }}
+                className="btn btn-primary w-full"
+              >
+                <User className="w-4 h-4" /> {t("signIn")}
+              </button>
+            )}
 
-      </div>
-    </div>
-  </div>
-)}
+            {/* Categories accordion */}
+            <button
+              onClick={() => setIsMobileCategoryOpen(!isMobileCategoryOpen)}
+              className="flex justify-between items-center font-semibold text-evergreen bg-white border border-stone-200 rounded-2xl px-4 py-3"
+            >
+              <span className="flex items-center gap-2">
+                <LayoutGrid className="w-4 h-4" /> {t("allCategory")}
+              </span>
+              <ChevronDown
+                className={`w-4 h-4 transition-transform ${
+                  isMobileCategoryOpen ? "rotate-180" : ""
+                }`}
+              />
+            </button>
 
+            {isMobileCategoryOpen && (
+              <div className="space-y-1 -mt-2">
+                {dbCategories.map((group) => (
+                  <div key={group.titleKey}>
+                    <button
+                      className="w-full text-left flex justify-between items-center px-3 py-2 rounded-xl text-[13px] font-bold text-evergreen hover:bg-mist/60 transition"
+                      onClick={() => {
+                        navigate(`/products?category=${group.titleKey.toLowerCase()}`);
+                        setIsMobileMenuOpen(false);
+                        setIsMobileCategoryOpen(false);
+                      }}
+                    >
+                      {language === "si" ? t(group.titleKey) : group.name || t(group.titleKey)}
+                    </button>
+                    {group.items && group.items.length > 0 && (
+                      <ul className="ml-3 border-l-2 border-honey/30 pl-3 space-y-0.5">
+                        {group.items.map((item: any) => renderCategory(item))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Links */}
+            <div className="flex flex-col gap-1 border-t border-stone-200 pt-4">
+              {navLinks
+                .filter((link) => !link.adminOnly || user?.role === "admin")
+                .map((link) => (
+                  <NavLink
+                    key={link.key}
+                    to={link.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className={({ isActive }) =>
+                      `px-3 py-2.5 rounded-xl font-medium transition ${
+                        isActive
+                          ? "bg-mist/60 text-evergreen"
+                          : "text-stone-600 hover:bg-stone-100"
+                      }`
+                    }
+                  >
+                    {t(link.key)}
+                  </NavLink>
+                ))}
+              <button
+                onClick={() => {
+                  navigate("/favorites");
+                  setIsMobileMenuOpen(false);
+                }}
+                className="px-3 py-2.5 rounded-xl font-medium text-stone-600 hover:bg-stone-100 text-left flex items-center gap-2"
+              >
+                <Heart className="w-4 h-4" /> {t("favorites")}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </nav>
-  );} 
+  );
+}

@@ -1,52 +1,87 @@
-import { Facebook, Instagram, Twitter, MapPin, Phone, Mail } from "lucide-react";
+import { Facebook, Instagram, Twitter, MapPin, Phone, Mail, ArrowRight, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useLanguage } from "../../context/LanguageContext";
+import Logo from "../Logo";
 
 export default function Footer() {
   const navigate = useNavigate();
+  const { t } = useLanguage();
 
   return (
-    <footer className="bg-[#1e3a5f] text-white mt-20">
-      <div className="max-w-7xl mx-auto px-6 pt-14 pb-8">
-        <div className="grid gap-10 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 mb-12">
+    <footer className="relative bg-evergreen text-white mt-24 overflow-hidden">
+      {/* Decorative glows */}
+      <div className="pointer-events-none absolute inset-0 opacity-[0.07]">
+        <div className="absolute -top-24 -left-24 w-96 h-96 bg-honey rounded-full blur-3xl" />
+        <div className="absolute -bottom-32 right-0 w-[28rem] h-[28rem] bg-sage rounded-full blur-3xl" />
+      </div>
 
-          {/* BRAND */}
-          <div className="lg:col-span-1">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-9 h-9 bg-[#d4af37] rounded-full flex items-center justify-center text-[#1e3a5f] font-black text-sm">M</div>
-              <div>
-                <p className="font-bold text-white leading-none">Mayan's</p>
-                <p className="text-[10px] text-[#d4af37] tracking-widest">ORGANIC</p>
-              </div>
-            </div>
-            <p className="text-sm text-white/60 leading-relaxed">
-              Fresh, organic, and sustainable products sourced directly from trusted farmers.
+      {/* Newsletter band */}
+      <div className="relative max-w-7xl mx-auto px-6 pt-16">
+        <div className="rounded-3xl bg-white/[0.06] border border-white/10 backdrop-blur-sm p-8 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <div className="max-w-md">
+            <p className="eyebrow text-honey-light mb-2">Stay Fresh</p>
+            <h3 className="font-display text-2xl md:text-3xl font-semibold leading-tight">
+              Get fresh drops & exclusive organic offers
+            </h3>
+          </div>
+          <form
+            onSubmit={(e) => e.preventDefault()}
+            className="flex w-full md:w-auto items-center bg-white rounded-full p-1.5 pl-5 max-w-md md:min-w-[380px]"
+          >
+            <Mail className="w-4 h-4 text-stone-400 shrink-0" />
+            <input
+              type="email"
+              placeholder="your@email.com"
+              className="flex-1 bg-transparent px-3 py-2 text-sm text-ink outline-none placeholder-stone-400"
+            />
+            <button type="submit" className="btn btn-accent text-sm py-2.5 px-5">
+              <Send className="w-4 h-4" />
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {/* Main grid */}
+      <div className="relative max-w-7xl mx-auto px-6 pt-14 pb-8">
+        <div className="grid gap-10 grid-cols-2 lg:grid-cols-5 mb-12">
+          {/* Brand */}
+          <div className="col-span-2 lg:col-span-1">
+            <Logo height={64} width={170} className="-ml-2 mb-3" />
+            <p className="text-sm text-white/55 leading-relaxed max-w-xs">
+              Fresh, organic, and sustainable products sourced directly from trusted farmers across
+              Sri Lanka.
             </p>
           </div>
 
-          {/* PAYMENT */}
+          {/* Payment */}
           <div>
-            <h3 className="text-[#d4af37] font-semibold mb-4 text-sm uppercase tracking-wider">Payment</h3>
-            <ul className="space-y-2 text-sm text-white/70">
+            <h4 className="text-honey-light font-semibold mb-4 text-xs uppercase tracking-[0.18em]">
+              Payment
+            </h4>
+            <ul className="space-y-2.5 text-sm text-white/65">
               <li>Cash on Delivery</li>
               <li>Bank Transfer</li>
             </ul>
           </div>
 
-          {/* INFO */}
+          {/* Company */}
           <div>
-            <h3 className="text-[#d4af37] font-semibold mb-4 text-sm uppercase tracking-wider">Company</h3>
-            <ul className="space-y-2 text-sm">
+            <h4 className="text-honey-light font-semibold mb-4 text-xs uppercase tracking-[0.18em]">
+              Company
+            </h4>
+            <ul className="space-y-2.5 text-sm">
               {[
-                { label: "About Us", href: "/about" },
-                { label: "Contact Us", href: "/contact" },
-                { label: "Our Blog", href: "/blog" },
-                { label: "Products", href: "/products" },
+                { label: t("about"), href: "/about" },
+                { label: t("contactTitle"), href: "/contact" },
+                { label: t("blog"), href: "/blog" },
+                { label: t("products"), href: "/products" },
               ].map((link) => (
                 <li key={link.href}>
                   <button
                     onClick={() => navigate(link.href)}
-                    className="text-white/70 hover:text-[#d4af37] transition"
+                    className="group inline-flex items-center gap-1.5 text-white/65 hover:text-honey-light transition"
                   >
+                    <ArrowRight className="w-3 h-3 -ml-4 opacity-0 group-hover:ml-0 group-hover:opacity-100 transition-all" />
                     {link.label}
                   </button>
                 </li>
@@ -54,57 +89,51 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* HEAD OFFICE */}
+          {/* Head office */}
           <div>
-            <h3 className="text-[#d4af37] font-semibold mb-4 text-sm uppercase tracking-wider">Head Office</h3>
-            <div className="space-y-3 text-sm text-white/70">
-              <div className="flex items-start gap-2">
-                <MapPin className="w-4 h-4 text-[#d4af37] flex-shrink-0 mt-0.5" />
-                <span>No 46, Old Road<br />Watareka, Meegoda</span>
+            <h4 className="text-honey-light font-semibold mb-4 text-xs uppercase tracking-[0.18em]">
+              Head Office
+            </h4>
+            <div className="space-y-3 text-sm text-white/65">
+              <div className="flex items-start gap-2.5">
+                <MapPin className="w-4 h-4 text-honey-light flex-shrink-0 mt-0.5" />
+                <span>
+                  No 46, Old Road
+                  <br />
+                  Watareka, Meegoda
+                </span>
               </div>
-              <div className="flex items-center gap-2">
-                <Phone className="w-4 h-4 text-[#d4af37]" />
+              <div className="flex items-center gap-2.5">
+                <Phone className="w-4 h-4 text-honey-light" />
                 <span>+94 XX XXX XXXX</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Mail className="w-4 h-4 text-[#d4af37]" />
+              <div className="flex items-center gap-2.5">
+                <Mail className="w-4 h-4 text-honey-light" />
                 <span>info@mayons.lk</span>
               </div>
+              <div className="flex gap-2.5 pt-2">
+                {[Facebook, Instagram, Twitter].map((Icon, i) => (
+                  <button
+                    key={i}
+                    className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-honey hover:text-evergreen transition"
+                  >
+                    <Icon className="w-4 h-4" />
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-
-          {/* FOLLOW US */}
-          <div>
-            <h3 className="text-[#d4af37] font-semibold mb-4 text-sm uppercase tracking-wider">Follow Us</h3>
-            <div className="flex gap-3 mb-4">
-              {[
-                { Icon: Facebook, label: "Facebook" },
-                { Icon: Instagram, label: "Instagram" },
-                { Icon: Twitter, label: "Twitter" },
-              ].map(({ Icon, label }) => (
-                <button
-                  key={label}
-                  aria-label={label}
-                  className="w-9 h-9 rounded-full bg-white/10 flex items-center justify-center hover:bg-[#d4af37] hover:text-[#1e3a5f] transition"
-                >
-                  <Icon className="w-4 h-4" />
-                </button>
-              ))}
-            </div>
-            <p className="text-xs text-white/50">Stay connected for fresh updates and exclusive offers.</p>
           </div>
         </div>
 
-        {/* DIVIDER */}
         <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/40">
-          <p>© 2026 Mayan's Organic Products. All rights reserved.</p>
+          <p>© 2026 Mayan&apos;s Organic Products. {t("allRightsReserved")}.</p>
           <p>
             Developed by{" "}
             <a
               href="https://synexis.lk"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[#d4af37]/80 hover:text-[#d4af37] transition font-medium"
+              className="text-honey-light/80 hover:text-honey-light transition font-medium"
             >
               Synexis Technologies
             </a>

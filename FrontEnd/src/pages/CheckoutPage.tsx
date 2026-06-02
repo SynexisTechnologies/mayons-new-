@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { ArrowLeft, Truck, CheckCircle, AlertCircle } from "lucide-react";
+import { ArrowLeft, Truck, CheckCircle, AlertCircle, Clock } from "lucide-react";
 import type { CartItem } from "../context/CartContext";
 import { placeOrder } from "../services/CheckoutServices";
 import { useLanguage } from "../context/LanguageContext";
@@ -20,21 +20,18 @@ interface CheckoutFormData {
   deliveryInstructions: string;
 }
 
+const inputCls =
+  "w-full bg-stone-50 border border-stone-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-evergreen focus:ring-4 focus:ring-evergreen/10 focus:bg-white transition";
+const labelCls = "block text-sm font-medium text-ink mb-1.5";
 
 export default function CheckoutPage({ items, onBack }: Props) {
   const { t } = useLanguage();
 
   const DELIVERY_FEE = 300.0;
-
-  const subtotal = items.reduce(
-    (sum, item) => sum + item.price * item.quantity,
-    0
-  );
-
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
   const total = subtotal + DELIVERY_FEE;
 
   const [formData, setFormData] = useState<CheckoutFormData>({
-
     name: "",
     phone: "",
     sendAlerts: false,
@@ -42,7 +39,7 @@ export default function CheckoutPage({ items, onBack }: Props) {
     city: "",
     locationType: "",
     deliveryDate: "",
-    deliveryTimeSlot: "", // ✅ changed to array
+    deliveryTimeSlot: "",
     deliveryInstructions: "",
   });
 
@@ -50,336 +47,267 @@ export default function CheckoutPage({ items, onBack }: Props) {
   const [orderStatus, setOrderStatus] = useState<"success" | "error" | null>(null);
   const [orderMessage, setOrderMessage] = useState("");
 
-const handleChange = (
-  e: React.ChangeEvent<
-    HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-  >
-) => {
-  const { name, value, type } = e.target;
-  const checked =
-    e.target instanceof HTMLInputElement ? e.target.checked : false;
-
-  setFormData({
-    ...formData,
-    [name]: type === "checkbox" ? checked : value,
-  });
-
-  setErrors({ ...errors, [name]: "" });
-};
-
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
+  ) => {
+    const { name, value, type } = e.target;
+    const checked = e.target instanceof HTMLInputElement ? e.target.checked : false;
+    setFormData({ ...formData, [name]: type === "checkbox" ? checked : value });
+    setErrors({ ...errors, [name]: "" });
+  };
 
   const validate = () => {
     const newErrors: { [key: string]: string } = {};
-
     if (!formData.name) newErrors.name = t("Required");
-    if (!/^\d{10}$/.test(formData.phone))
-      newErrors.phone = t("ValidPhone");
+    if (!/^\d{10}$/.test(formData.phone)) newErrors.phone = t("ValidPhone");
     if (!formData.address) newErrors.address = t("Required");
     if (!formData.city) newErrors.city = t("Required");
     if (!formData.locationType) newErrors.locationType = t("Required");
     if (!formData.deliveryDate) newErrors.deliveryDate = t("Required");
-    if (formData.deliveryTimeSlot.length === 0)
-      newErrors.deliveryTimeSlot = t("Required");
-
+    if (formData.deliveryTimeSlot.length === 0) newErrors.deliveryTimeSlot = t("Required");
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  if (!validate()) return;
-
-  try {
-    const orderPayload = {
-      addressId: formData.address, 
-      paymentMethod: "CASH_ON_DELIVERY",
-      deliveryType: "HOME_DELIVERY",
-      expectedDate: formData.deliveryDate,
-    };
-
-    await placeOrder(orderPayload);
-    setOrderStatus("success");
-    setOrderMessage(t("Order_Success"));
-  } catch (error: any) {
-    setOrderStatus("error");
-    setOrderMessage(error?.message || error?.response?.data?.message || "Order failed");
-  }
-};
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validate()) return;
+    try {
+      const orderPayload = {
+        addressId: formData.address,
+        paymentMethod: "CASH_ON_DELIVERY",
+        deliveryType: "HOME_DELIVERY",
+        expectedDate: formData.deliveryDate,
+      };
+      await placeOrder(orderPayload);
+      setOrderStatus("success");
+      setOrderMessage(t("Order_Success"));
+    } catch (error: any) {
+      setOrderStatus("error");
+      setOrderMessage(error?.message || error?.response?.data?.message || "Order failed");
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-slate-50 pt-36 pb-10">
+    <div className="min-h-screen bg-canvas pt-[150px] md:pt-[170px] pb-16">
       {/* Order Status Modal */}
       {orderStatus && (
-        <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 w-[320px] text-center animate-scaleIn">
-            <div className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${orderStatus === "success" ? "bg-green-100" : "bg-red-100"}`}>
-              {orderStatus === "success"
-                ? <CheckCircle className="w-8 h-8 text-green-500" />
-                : <AlertCircle className="w-8 h-8 text-red-500" />}
+        <div className="fixed inset-0 bg-ink/40 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-white rounded-3xl shadow-2xl p-8 w-[320px] text-center animate-scaleIn">
+            <div
+              className={`w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ${
+                orderStatus === "success" ? "bg-pine/10" : "bg-clay-soft"
+              }`}
+            >
+              {orderStatus === "success" ? (
+                <CheckCircle className="w-8 h-8 text-pine" />
+              ) : (
+                <AlertCircle className="w-8 h-8 text-clay" />
+              )}
             </div>
-            <h3 className={`text-xl font-bold mb-2 ${orderStatus === "success" ? "text-[#1e3a5f]" : "text-red-600"}`}>
+            <h3
+              className={`font-display text-2xl font-semibold mb-2 ${
+                orderStatus === "success" ? "text-ink" : "text-clay"
+              }`}
+            >
               {orderStatus === "success" ? "Order Placed!" : "Order Failed"}
             </h3>
-            <p className="text-slate-500 text-sm mb-6">{orderMessage}</p>
-            <button onClick={() => setOrderStatus(null)}
-              className="w-full bg-[#1e3a5f] text-white py-2.5 rounded-xl font-semibold hover:bg-[#2a4a7c] transition">
+            <p className="text-stone-500 text-sm mb-6">{orderMessage}</p>
+            <button onClick={() => setOrderStatus(null)} className="btn btn-primary w-full py-2.5">
               OK
             </button>
           </div>
         </div>
       )}
-      <div className="max-w-7xl mx-auto px-4">
 
+      <div className="max-w-7xl mx-auto px-6">
         <button
           onClick={onBack}
-          className="flex items-center gap-2 text-[#1e3a5f] mb-6"
+          className="flex items-center gap-2 text-stone-500 hover:text-evergreen mb-6 transition text-sm"
         >
           <ArrowLeft size={18} />
           {t("Continue_shopping")}
         </button>
 
-        <h1 className="text-3xl font-bold mb-8 text-[#1e3a5f]">
+        <h1 className="font-display text-3xl md:text-4xl font-semibold mb-8 text-ink">
           {t("Checkout")}
         </h1>
 
         <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-8">
-
-          {/* LEFT SIDE */}
+          {/* LEFT */}
           <div className="lg:col-span-2 space-y-6">
-
-            <div className="bg-white p-7 rounded-2xl border border-slate-100 shadow-sm">
-              <div className="flex items-center gap-2 mb-6">
-                <Truck className="text-[#d4af37]" />
-                <h2 className="text-xl font-bold text-[#1e3a5f]">
-                  {t("Recipientinfo")}
-                </h2>
+            <div className="card p-7">
+              <div className="flex items-center gap-2.5 mb-6">
+                <div className="w-9 h-9 rounded-xl bg-mist flex items-center justify-center">
+                  <Truck className="w-5 h-5 text-evergreen" />
+                </div>
+                <h2 className="font-display text-xl font-semibold text-ink">{t("Recipientinfo")}</h2>
               </div>
 
               <div className="space-y-4">
-
-                {/* Name */}
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    {t("Name")} <span className="text-red-500">*</span>
+                  <label className={labelCls}>
+                    {t("Name")} <span className="text-clay">*</span>
                   </label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    className="w-full border border-slate-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#1e3a5f] focus:ring-2 focus:ring-[#1e3a5f]/10 transition"
-                  />
-                  {errors.name && (
-                    <p className="text-red-500 text-xs">{errors.name}</p>
-                  )}
+                  <input type="text" name="name" value={formData.name} onChange={handleChange} className={inputCls} />
+                  {errors.name && <p className="text-clay text-xs mt-1">{errors.name}</p>}
                 </div>
 
-                {/* Phone */}
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    {t("PhoneNo")}<span className="text-red-500">*</span>
+                  <label className={labelCls}>
+                    {t("PhoneNo")} <span className="text-clay">*</span>
                   </label>
-                  <input
-                    type="tel"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    className="w-full border border-slate-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#1e3a5f] focus:ring-2 focus:ring-[#1e3a5f]/10 transition"
-                  />
-                  {errors.phone && (
-                    <p className="text-red-500 text-xs">{errors.phone}</p>
-                  )}
+                  <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className={inputCls} />
+                  {errors.phone && <p className="text-clay text-xs mt-1">{errors.phone}</p>}
                 </div>
 
-                {/* Send Alerts */}
-                <div className="flex items-center gap-2">
+                <label className="flex items-center gap-2.5 cursor-pointer">
                   <input
                     type="checkbox"
                     name="sendAlerts"
                     checked={formData.sendAlerts}
                     onChange={handleChange}
+                    className="w-4 h-4 accent-evergreen"
                   />
-                  <label className="text-sm">
-                    {t("Send_Order_Alerts")}
+                  <span className="text-sm text-stone-600">{t("Send_Order_Alerts")}</span>
+                </label>
+
+                <div>
+                  <label className={labelCls}>
+                    {t("Delivery_Add")} <span className="text-clay">*</span>
                   </label>
+                  <input type="text" name="address" value={formData.address} onChange={handleChange} className={inputCls} />
+                  {errors.address && <p className="text-clay text-xs mt-1">{errors.address}</p>}
                 </div>
 
-                {/* Address */}
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <input
+                      type="text"
+                      name="city"
+                      value={formData.city}
+                      onChange={handleChange}
+                      placeholder={t("City")}
+                      className={inputCls}
+                    />
+                    {errors.city && <p className="text-clay text-xs mt-1">{errors.city}</p>}
+                  </div>
+                  <div>
+                    <select name="locationType" value={formData.locationType} onChange={handleChange} className={inputCls}>
+                      <option value="">{t("Select_Option")}</option>
+                      <option value="home">{t("home1")}</option>
+                      <option value="office">{t("office")}</option>
+                      <option value="other">{t("other")}</option>
+                    </select>
+                    {errors.locationType && <p className="text-clay text-xs mt-1">{errors.locationType}</p>}
+                  </div>
+                </div>
+
                 <div>
-                  <label className="block text-sm font-medium mb-1">
-                    {t("Delivery_Add")} <span className="text-red-500">*</span>
+                  <label className={labelCls}>
+                    {t("Delivery_Date")} <span className="text-clay">*</span>
                   </label>
-                  <input
-                    type="text"
-                    name="address"
-                    value={formData.address}
-                    onChange={handleChange}
-                    className="w-full border border-slate-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#1e3a5f] focus:ring-2 focus:ring-[#1e3a5f]/10 transition"
-                  />
-                  {errors.address && (
-                    <p className="text-red-500 text-xs">{errors.address}</p>
+                  <input type="date" name="deliveryDate" value={formData.deliveryDate} onChange={handleChange} className={inputCls} />
+                  {errors.deliveryDate && <p className="text-clay text-xs mt-1">{errors.deliveryDate}</p>}
+                </div>
+
+                <div>
+                  <label className={labelCls}>
+                    {t("Delivery_Time")} <span className="text-clay">*</span>
+                  </label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {["8:00 AM - 5:00 PM", "9:00 AM - 12:00 PM", "12:00 PM - 3:00 PM", "3:00 PM - 6:00 PM"].map(
+                      (slot) => (
+                        <button
+                          type="button"
+                          key={slot}
+                          onClick={() => setFormData({ ...formData, deliveryTimeSlot: slot })}
+                          className={`flex items-center gap-2 border rounded-xl py-3 px-4 text-sm font-medium transition ${
+                            formData.deliveryTimeSlot === slot
+                              ? "border-evergreen bg-mist/60 text-evergreen"
+                              : "border-stone-200 text-stone-600 hover:border-evergreen/40"
+                          }`}
+                        >
+                          <Clock className="w-4 h-4" /> {slot}
+                        </button>
+                      )
+                    )}
+                  </div>
+                  {errors.deliveryTimeSlot && (
+                    <p className="text-clay text-xs mt-2">{errors.deliveryTimeSlot}</p>
                   )}
                 </div>
 
-                {/* City & Location */}
-                <div className="grid grid-cols-2 gap-4">
-                  <input
-                    type="text"
-                    name="city"
-                    value={formData.city}
-                    onChange={handleChange}
-                    placeholder={t("City")}
-                    className="border border-slate-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#1e3a5f] focus:ring-2 focus:ring-[#1e3a5f]/10 transition w-full"
-                  />
-
-                  <select
-                    name="locationType"
-                    value={formData.locationType}
-                    onChange={handleChange}
-                    className="border border-slate-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#1e3a5f] focus:ring-2 focus:ring-[#1e3a5f]/10 transition w-full"
-                  >
-                    <option value="">{t("Select_Option")}</option>
-                    <option value="home">{t("home1")}</option>
-                    <option value="office">{t("office")}</option>
-                    <option value="other">{t("other")}</option>
-                  </select>
-                </div>
-
-                {/* Delivery Date */}
                 <div>
-                  <label>{t("Delivery_Date")} <span className="text-red-500">*</span></label>
-                  <input
-                    type="date"
-                    name="deliveryDate"
-                    value={formData.deliveryDate}
-                    onChange={handleChange}
-                    className="w-full border border-slate-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#1e3a5f] focus:ring-2 focus:ring-[#1e3a5f]/10 transition"
-                  />
-                </div>
-
-<div>
-  <label className="block mb-2 font-medium">
-    {t("Delivery_Time")} <span className="text-red-500">*</span>
-  </label>
-
-  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-    {[
-      "8:00 AM - 5:00 PM",
-      "9:00 AM - 12:00 PM",
-      "12:00 PM - 3:00 PM",
-      "3:00 PM - 6:00 PM",
-    ].map((slot) => (
-      <button
-        type="button"
-        key={slot}
-        onClick={() =>
-          setFormData({ ...formData, deliveryTimeSlot: slot })
-        }
-        className={`border rounded-xl py-3 px-4 text-sm font-medium transition cursor-pointer
-          ${
-            formData.deliveryTimeSlot === slot
-              ? "border-[#1e3a5f] bg-[#1e3a5f]/5 text-[#1e3a5f]"
-              : "border-slate-200 text-slate-600 hover:border-[#1e3a5f]/40"
-          }
-        `}
-      >
-        ⏰ {slot}
-      </button>
-    ))}
-  </div>
-
-  {errors.deliveryTimeSlot && (
-    <p className="text-red-500 text-xs mt-2">
-      {errors.deliveryTimeSlot}
-    </p>
-  )}
-</div>
-
-                {/* Delivery Instructions */}
-                <div>
-                  <label>{t("Delivery_Instructions")}</label>
+                  <label className={labelCls}>{t("Delivery_Instructions")}</label>
                   <textarea
                     name="deliveryInstructions"
                     value={formData.deliveryInstructions}
                     onChange={handleChange}
                     rows={3}
-                    className="w-full border border-slate-200 px-4 py-3 rounded-xl text-sm outline-none focus:border-[#1e3a5f] focus:ring-2 focus:ring-[#1e3a5f]/10 transition"
+                    className={inputCls}
                   />
-                  <p className="text-red-500 text-xs">
-                    {t("No_Special_Time_Request")}
-                  </p>
+                  <p className="text-clay/80 text-xs mt-1">{t("No_Special_Time_Request")}</p>
                 </div>
-
               </div>
             </div>
           </div>
 
-          {/* RIGHT SIDE */}
-          <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-7 sticky top-36">
-            <h2 className="text-xl font-bold text-[#1e3a5f] mb-4">
-              {t("Order_Summary")}
-            </h2>
+          {/* RIGHT */}
+          <div className="card p-7 h-fit sticky top-[150px]">
+            <h2 className="font-display text-xl font-semibold text-ink mb-5">{t("Order_Summary")}</h2>
 
-            <div className="space-y-4 text-sm">
+            <div className="space-y-4 text-sm max-h-72 overflow-y-auto scrollbar-hide pr-1">
               {items.map((item) => (
                 <div key={item.id} className="flex items-center justify-between gap-3">
-                  
-                  {/* Image + Name */}
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 min-w-0">
                     <img
                       src={item.image}
                       alt={(item as any).nameEn || (item as any).nameSi || item.nameKey}
-                      className="w-14 h-14 object-cover rounded-lg border"
-                      onError={(e) =>
-                        ((e.target as HTMLImageElement).src =
-                          "/placeholder.png")
-                      }
+                      className="w-14 h-14 object-cover rounded-xl border border-stone-100 flex-shrink-0"
+                      onError={(e) => ((e.target as HTMLImageElement).src = "/placeholder.png")}
                     />
-                    <div>
-                      <p className="font-medium">
+                    <div className="min-w-0">
+                      <p className="font-medium text-ink line-clamp-1">
                         {(item as any).nameEn || (item as any).nameSi || item.nameKey}
                       </p>
-                      <p className="text-xs text-gray-500">
-                        × {item.quantity}
-                      </p>
+                      <p className="text-xs text-stone-400">× {item.quantity}</p>
                     </div>
                   </div>
-
-                  {/* Price */}
-                  <span className="font-semibold">
-                    Rs {(item.price * item.quantity).toFixed(2)}
+                  <span className="font-semibold text-ink whitespace-nowrap">
+                    {t("Rs")} {(item.price * item.quantity).toFixed(2)}
                   </span>
                 </div>
               ))}
             </div>
 
-            <div className="border-t mt-4 pt-4 text-sm space-y-2">
-              <div className="flex justify-between">
+            <div className="border-t border-stone-200 mt-5 pt-4 text-sm space-y-2.5">
+              <div className="flex justify-between text-stone-600">
                 <span>{t("Subtotal")}</span>
-                <span>Rs {subtotal.toFixed(2)}</span>
+                <span>
+                  {t("Rs")} {subtotal.toFixed(2)}
+                </span>
               </div>
-              <div className="flex justify-between">
+              <div className="flex justify-between text-stone-600">
                 <span>{t("Delivery_Fee")}</span>
-                <span>Rs {DELIVERY_FEE.toFixed(2)}</span>
+                <span>
+                  {t("Rs")} {DELIVERY_FEE.toFixed(2)}
+                </span>
               </div>
-              <div className="flex justify-between font-bold text-lg text-[#1e3a5f]">
+              <div className="flex justify-between font-bold text-ink pt-2 border-t border-stone-100">
                 <span>{t("Tot")}</span>
-                <span>Rs {total.toFixed(2)}</span>
+                <span className="font-display text-xl text-evergreen">
+                  {t("Rs")} {total.toFixed(2)}
+                </span>
               </div>
             </div>
 
-            <p className="text-xs text-gray-500 mt-4">
-              {t("Statement")}
-            </p>
+            <p className="text-xs text-stone-400 mt-4">{t("Statement")}</p>
 
-            <button
-              type="submit"
-              className="w-full bg-[#1e3a5f] text-white py-3.5 rounded-xl mt-6 font-bold hover:bg-[#2a4a7c] transition shadow-sm cursor-pointer text-sm"
-            >
+            <button type="submit" className="btn btn-primary w-full py-3.5 mt-6">
               {t("Place_Order")}
             </button>
           </div>
-
         </form>
       </div>
     </div>

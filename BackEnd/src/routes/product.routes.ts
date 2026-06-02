@@ -7,12 +7,13 @@ import {
   deleteProduct,
   getSoldOutProducts
 } from "../controllers/Product.controller";
+import { upload } from "../middlewares/uploads";
 
 const productRouter = Router();
 
-// CRUD routes
-productRouter.post("/", createProduct);
-productRouter.put("/update/:id", updateProduct);
+// CRUD routes — `image` is uploaded as a file to /uploads
+productRouter.post("/", upload.single("image"), createProduct);
+productRouter.put("/update/:id", upload.single("image"), updateProduct);
 productRouter.delete("/delete/:id", deleteProduct);
 productRouter.get("/all", getAllProducts);
 productRouter.get("/sold-out", getSoldOutProducts);

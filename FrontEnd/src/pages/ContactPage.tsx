@@ -13,18 +13,22 @@ const socialLinks = [
 
 export default function ContactPage() {
   return (
-    <div className="bg-white">
+    <div className="bg-canvas">
       <ContactHero />
       <ContactInfo />
       <ContactForm />
       <ContactFAQ />
 
       {/* Social Media */}
-      <section className="bg-slate-50 py-16">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="text-[#d4af37] text-xs font-bold tracking-[0.3em] uppercase mb-3">Connect With Us</p>
-          <h2 className="text-2xl sm:text-3xl font-bold text-[#1e3a5f] mb-3">Follow Our Journey</h2>
-          <p className="text-slate-500 text-sm mb-8 max-w-md mx-auto">Stay connected for updates, tips, and exclusive offers.</p>
+      <section className="bg-cream/40 py-16">
+        <div className="max-w-7xl mx-auto px-6 text-center">
+          <p className="eyebrow text-honey justify-center mb-3">Connect With Us</p>
+          <h2 className="font-display text-3xl md:text-4xl font-semibold text-ink mb-3">
+            Follow Our Journey
+          </h2>
+          <p className="text-stone-500 text-sm mb-8 max-w-md mx-auto">
+            Stay connected for updates, tips, and exclusive offers.
+          </p>
           <div className="flex justify-center gap-4">
             {socialLinks.map((item) => (
               <a
@@ -33,7 +37,7 @@ export default function ContactPage() {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label={item.label}
-                className="w-12 h-12 bg-[#1e3a5f] text-white rounded-full flex items-center justify-center hover:bg-[#d4af37] hover:text-[#1e3a5f] transition shadow-sm hover:scale-110 cursor-pointer"
+                className="w-12 h-12 bg-evergreen text-white rounded-full flex items-center justify-center hover:bg-honey transition shadow-sm hover:scale-110"
               >
                 {item.icon}
               </a>

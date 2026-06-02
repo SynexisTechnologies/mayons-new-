@@ -1,136 +1,298 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700;9..144,800;9..144,900&family=Inter:wght@300;400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   DESIGN TOKENS  —  "Modern Organic Editorial"
+   Tailwind v4 reads these and generates utilities (bg-evergreen, text-honey…)
+   ═══════════════════════════════════════════════════════════════════════════ */
+@theme {
+  --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+
+  /* Surfaces */
+  --color-canvas: #faf9f6;   /* soft porcelain page background */
+  --color-cream: #f4eef6;    /* faint lilac-tinted panels */
+  --color-sand: #e9e2d2;     /* (unused alias kept for safety) */
+  --color-sand-100: #efe8d8;
+  --color-sand-200: #e4dac4;
+
+  /* Brand — Mayons purple (#860ba0) family.
+     NOTE: token names (evergreen/forest/pine…) are kept for compatibility;
+     their VALUES are the purple/yellow/red brand. See memory: design-system. */
+  --color-ink: #241526;        /* near-black plum — primary text */
+  --color-evergreen: #860ba0;  /* PRIMARY brand purple (bars, buttons) */
+  --color-forest: #6d0884;     /* deeper purple — hover */
+  --color-pine: #2d8a55;       /* success green (kept green on purpose) */
+  --color-sage: #9c7aa6;       /* muted mauve — icon accents */
+  --color-mist: #f1e3f6;       /* faint lavender tint */
+
+  /* Accent — logo yellow */
+  --color-honey: #c98a00;        /* deep gold — readable on light bg */
+  --color-honey-light: #f5c518;  /* bright logo yellow — for dark/purple bg */
+  --color-honey-soft: #fbf1cc;   /* pale yellow surface */
+
+  /* Sale / alert — red */
+  --color-clay: #d62839;       /* red — sale / hot / error */
+  --color-clay-soft: #fbe3e5;
+
+  /* Neutrals (faint cool-tinted greys) */
+  --color-stone-50: #f6f4f7;
+  --color-stone-100: #eeeaef;
+  --color-stone-200: #e1dce3;
+  --color-stone-300: #c8c1cb;
+  --color-stone-400: #a097a4;
+  --color-stone-500: #756a78;
+  --color-stone-600: #534a56;
+
+  /* Motion */
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Nav heights (consumed by layout offsets) */
+  --nav-h: 70px;
+  --nav-h-md: 122px;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   BASE
+   ═══════════════════════════════════════════════════════════════════════════ */
 :root {
-  font-family: 'Inter', sans-serif;
+  font-family: var(--font-sans);
   line-height: 1.5;
-  font-weight: 400;
-  --nav-h: 72px;       /* top bar only (mobile) */
-  --nav-h-md: 116px;   /* top + bottom bar (desktop) */
+  color: var(--color-ink);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
 }
 
-/* Ensure all buttons show pointer cursor */
-button, [role="button"], [onClick] { cursor: pointer; }
+* { box-sizing: border-box; }
 
-/* Hide scrollbar completely */
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
+body {
+  margin: 0;
+  background: var(--color-canvas);
+  color: var(--color-ink);
 }
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
+
+h1, h2, h3, h4 { font-family: var(--font-display); }
+
+button, [role="button"] { cursor: pointer; }
+
+::selection { background: var(--color-honey); color: #fff; }
+
+/* Refined scrollbar */
+::-webkit-scrollbar { width: 11px; height: 11px; }
+::-webkit-scrollbar-track { background: var(--color-stone-50); }
+::-webkit-scrollbar-thumb {
+  background: var(--color-stone-300);
+  border-radius: 999px;
+  border: 3px solid var(--color-stone-50);
 }
+::-webkit-scrollbar-thumb:hover { background: var(--color-sage); }
+
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMPONENT PRIMITIVES
+   ═══════════════════════════════════════════════════════════════════════════ */
+.font-display { font-family: var(--font-display); }
+
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  border-radius: 999px;
+  padding: 0.8rem 1.6rem;
+  transition: transform 0.25s var(--ease-out-expo), background-color 0.25s ease,
+    box-shadow 0.25s ease, color 0.25s ease, border-color 0.25s ease;
+  white-space: nowrap;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn-primary {
+  background: var(--color-evergreen);
+  color: #fff;
+  box-shadow: 0 10px 28px -12px rgba(134, 11, 160, 0.7);
+}
+.btn-primary:hover {
+  background: var(--color-forest);
+  box-shadow: 0 16px 38px -12px rgba(134, 11, 160, 0.65);
+  transform: translateY(-2px);
+}
+
+.btn-accent {
+  background: var(--color-honey-light);
+  color: var(--color-ink);
+  box-shadow: 0 10px 28px -12px rgba(245, 197, 24, 0.9);
+}
+.btn-accent:hover {
+  background: #ffd93d;
+  color: var(--color-ink);
+  transform: translateY(-2px);
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--color-evergreen);
+  border: 1.5px solid var(--color-stone-200);
+}
+.btn-ghost:hover {
+  border-color: var(--color-evergreen);
+  background: var(--color-mist);
+  transform: translateY(-2px);
+}
+
+.btn-light {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: 1.5px solid rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(8px);
+}
+.btn-light:hover { background: rgba(255, 255, 255, 0.2); transform: translateY(-2px); }
+
+/* Pills / chips */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  border-radius: 999px;
+  padding: 0.4rem 0.9rem;
+  transition: all 0.2s ease;
+}
+
+/* Card */
+.card {
+  background: #fff;
+  border: 1px solid var(--color-stone-100);
+  border-radius: 1.5rem;
+  box-shadow: 0 1px 2px rgba(22, 36, 29, 0.04);
+}
+
+/* Surface helpers */
+.surface-cream { background: var(--color-cream); }
+.surface-evergreen { background: var(--color-evergreen); color: #fff; }
+
+/* Glass */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+}
+.glass-dark {
+  background: rgba(20, 64, 46, 0.6);
+  backdrop-filter: blur(20px) saturate(140%);
+  -webkit-backdrop-filter: blur(20px) saturate(140%);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.hover-lift { transition: transform 0.3s var(--ease-out-expo), box-shadow 0.3s ease; }
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 22px 50px -24px rgba(22, 36, 29, 0.4);
+}
+
+.text-balance { text-wrap: balance; }
+.text-pretty { text-wrap: pretty; }
+
+/* Decorative gradient text */
+.text-gradient-gold {
+  background: linear-gradient(120deg, #fff 0%, var(--color-honey-light) 55%, var(--color-honey) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* Hairline divider with center label */
+.rule { height: 1px; background: var(--color-stone-200); }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════════════════════════════════ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(16px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeIn { animation: fadeIn 0.7s var(--ease-out-expo) forwards; }
+
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(40px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fadeUp { animation: fadeUp 0.8s var(--ease-out-expo) forwards; }
 
 @keyframes wordFadeUp {
-  0% {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
-
-.animate-word {
-  animation: wordFadeUp 0.6s ease-out forwards;
-}
-@keyframes fadeIn {
-  0% { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
-}
-
-.animate-fadeIn {
-  animation: fadeIn 1.2s ease-in-out forwards;
-}
+.animate-word { animation: wordFadeUp 0.6s var(--ease-out-expo) forwards; }
 
 @keyframes scaleIn {
-  from {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.94) translateY(-4px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.animate-scaleIn { animation: scaleIn 0.24s var(--ease-out-expo); }
+
+@keyframes slideInRight {
+  from { transform: translateX(100%); }
+  to   { transform: translateX(0); }
+}
+.animate-slideIn { animation: slideInRight 0.32s var(--ease-out-expo); }
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-slideDown { animation: slideDown 0.22s var(--ease-out-expo); }
+
+@keyframes floaty {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+.animate-float { animation: floaty 6s ease-in-out infinite; }
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--color-stone-100) 25%, var(--color-stone-50) 50%, var(--color-stone-100) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }
 
-.animate-scaleIn {
-  animation: scaleIn 0.25s ease-out;
+@keyframes marquee {
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }
+.animate-marquee { animation: marquee 28s linear infinite; }
 
-@keyframes slideIn {
-  from {
-    transform: translateX(100%);
-  }
-  to {
-    transform: translateX(0);
-  }
-}
+/* ── Lenis smooth scroll ───────────────────────────────────────────────── */
+html.lenis, html.lenis body { height: auto; }
+.lenis.lenis-smooth { scroll-behavior: auto !important; }
+.lenis.lenis-smooth [data-lenis-prevent] { overscroll-behavior: contain; }
+.lenis.lenis-stopped { overflow: hidden; }
+.lenis.lenis-smooth iframe { pointer-events: none; }
 
-.animate-slideIn {
-  animation: slideIn 0.25s ease-out;
-}
-
-/* Mobile-only responsive adjustments (max-width: 640px) */
-@media (max-width: 640px) {
-  /* ensure images and svgs scale down */
-  img, svg {
-    max-width: 100% !important;
-    height: auto !important;
-  }
-
-  /* make interactive controls span available width on small screens */
-  button, input, select, textarea {
-    width: 100% !important;
-    max-width: 100% !important;
-  }
-
-  /* reduce base font-size slightly for small screens to avoid overflow */
-  :root {
-    font-size: 14px;
-  }
-
-  /* tighten page padding on small screens */
-  .max-w-7xl {
-    padding-left: 1rem !important;
-    padding-right: 1rem !important;
-  }
-
-  /* collapse 3/4-column grids to single column on mobile, keep 2-column grids intact */
-  .grid.grid-cols-4, .grid.grid-cols-3 {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 0.75rem !important;
-  }
-
-  /* allow search (hidden by default) to appear on mobile where useful */
-  nav .hidden.md\:flex {
-    display: flex !important;
-    width: 100% !important;
-    margin: 0.5rem 0 !important;
-  }
-
-  /* reduce navbar padding and stack items where necessary */
-  nav > div:first-child {
-    padding-top: 0.5rem !important;
-    padding-bottom: 0.5rem !important;
-    height: auto !important;
-    align-items: center !important;
-  }
-
-  /* mobile menu: ensure menu area fits and is scrollable */
-  .md\:hidden.fixed.inset-x-0.top-\[72px\] {
-    max-height: calc(100vh - 64px) !important;
-    overflow-y: auto !important;
-  }
-
-  /* cards and product tiles should not overflow horizontally */
-  .card, .product-card, .eat-card, .events-card {
-    width: 100% !important;
-  }
-
-  /* smaller headings on mobile to prevent wrapping issues */
-  h1, h2, h3, h4, h5 {
-    line-height: 1.25 !important;
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
   }
 }

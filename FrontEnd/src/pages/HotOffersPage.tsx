@@ -1,12 +1,10 @@
 import { useEffect, useState } from "react";
 import OffersNewsletter from "../components/hotOffers/OffersNewsletter";
-import { useLanguage } from "../context/LanguageContext";
 import { Offer } from "../data/offer";
 import { getAllOffers } from "../api/OfferApi";
 import OfferFilters from "../components/hotOffers/OffersFilters";
 import OfferCard from "../components/hotOffers/OffersCard";
 import OfferHero from "../components/hotOffers/OfferHero";
-
 
 export default function HotOffersPage() {
   const [offers, setOffers] = useState<Offer[]>([]);
@@ -25,24 +23,24 @@ export default function HotOffersPage() {
   });
 
   return (
-<main className="bg-slate-50 min-h-screen pb-16">
-  <OfferHero />
+    <main className="bg-canvas min-h-screen pb-16">
+      <OfferHero />
 
- <section className="max-w-7xl mx-auto px-4 py-8">
-  <OfferFilters selected={selected} setSelected={setSelected} />
+      <section id="offers" className="max-w-7xl mx-auto px-6 py-12">
+        <OfferFilters selected={selected} setSelected={setSelected} />
 
-  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-    {filtered
-      .filter((offer) => offer.product) // remove empty offers
-      .map((offer) => (
-        <OfferCard key={offer._id || offer.product?._id} offer={offer} />
-      ))}
-  </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {filtered
+            .filter((offer) => offer.product)
+            .map((offer) => (
+              <OfferCard key={offer._id || offer.product?._id} offer={offer} />
+            ))}
+        </div>
 
-  <div className="mt-12">
-    <OffersNewsletter />
-  </div>
-</section>
-</main>
+        <div className="mt-16">
+          <OffersNewsletter />
+        </div>
+      </section>
+    </main>
   );
 }

@@ -6,7 +6,7 @@ import { Product } from "../components/product/types";
 import { productService } from "../services/ProductServices";
 import { megaCategories } from "../data/categories";
 import { useLanguage } from "../context/LanguageContext";
-import { SlidersHorizontal, ChevronDown, SearchX, Heart, ChevronRight } from "lucide-react";
+import { SlidersHorizontal, ChevronDown, SearchX, Heart, ChevronRight, ShoppingBag } from "lucide-react";
 
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, "");
 
@@ -50,7 +50,6 @@ export default function ProductPage() {
   const [sortOpen, setSortOpen] = useState(false);
   const sortRef = useRef<HTMLDivElement>(null);
 
-  // Close sort dropdown when clicking outside
   useEffect(() => {
     const handler = (e: MouseEvent) => {
       if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
@@ -159,8 +158,7 @@ export default function ProductPage() {
         break;
       case "newest":
         filtered.sort(
-          (a, b) =>
-            new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime()
+          (a, b) => new Date(b.createdAt || "").getTime() - new Date(a.createdAt || "").getTime()
         );
         break;
       default:
@@ -175,7 +173,6 @@ export default function ProductPage() {
     [category]
   );
 
-  // Sub-category pills: first-level items of the selected main category
   const subCategoryPills = useMemo(() => {
     if (!selectedMainCategory) return [];
     return (selectedMainCategory.items || []).map((item) => ({
@@ -184,7 +181,6 @@ export default function ProductPage() {
     }));
   }, [selectedMainCategory]);
 
-  // Whether the current category is a sub-category (not main, not all)
   const activeSubKey = useMemo(() => {
     if (category === "all" || mainCategories.some((c) => c.key === category)) return null;
     return category;
@@ -195,9 +191,7 @@ export default function ProductPage() {
     const groups: Record<string, Product[]> = {};
     (selectedMainCategory.items || []).forEach((item) => {
       const subKey = typeof item === "string" ? item : item.titleKey;
-      groups[subKey] = filteredProducts.filter(
-        (p) => norm(p.subCategory || "") === norm(subKey)
-      );
+      groups[subKey] = filteredProducts.filter((p) => norm(p.subCategory || "") === norm(subKey));
     });
     return groups;
   }, [filteredProducts, selectedMainCategory]);
@@ -212,39 +206,40 @@ export default function ProductPage() {
   const activeSortLabel = sortOptions.find((s) => s.value === sortBy)?.label ?? "Sort";
 
   return (
-    <main className="min-h-screen bg-slate-50">
-      {/* ── HERO ── */}
-      <section className="relative overflow-hidden min-h-[500px] md:min-h-[560px]">
+    <main className="min-h-screen bg-canvas">
+      {/* HERO */}
+      <section className="relative overflow-hidden min-h-[480px] md:min-h-[560px]">
         <div className="absolute inset-0">
           <img
             src="https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=1920&q=80"
             className="w-full h-full object-cover scale-105"
             alt="Products"
           />
-          <div className="absolute inset-0 bg-gradient-to-r from-[#1e3a5f]/90 via-[#1e3a5f]/60 to-[#1e3a5f]/10" />
+          <div className="absolute inset-0 bg-gradient-to-r from-ink/92 via-ink/65 to-ink/20" />
+          <div className="absolute inset-0 bg-gradient-to-t from-ink/70 to-transparent" />
         </div>
-        <div className="relative z-10 min-h-[500px] md:min-h-[560px] flex flex-col items-center justify-center text-white text-center px-4 pt-[80px] md:pt-[130px] pb-14">
-          <div className="inline-flex items-center gap-2 bg-[#d4af37]/20 border border-[#d4af37]/40 text-[#d4af37] px-4 py-1.5 rounded-full text-xs font-bold tracking-widest uppercase mb-4">
-            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" /></svg>
-            Our Collection
-          </div>
-          <h1 className="text-3xl sm:text-5xl font-extrabold mb-3 tracking-tight drop-shadow">
+        <div className="relative z-10 min-h-[480px] md:min-h-[560px] max-w-7xl mx-auto flex flex-col justify-center text-white px-6 pt-[120px] md:pt-[150px] pb-16">
+          <p className="eyebrow text-honey-light mb-4">
+            <ShoppingBag className="w-3.5 h-3.5" /> Our Collection
+          </p>
+          <h1 className="font-display text-5xl sm:text-6xl md:text-7xl font-semibold mb-4 tracking-tight max-w-2xl leading-[1.02]">
             {t("allProducts")}
           </h1>
-          <p className="text-white/70 text-sm sm:text-base max-w-md mb-6">{t("browse")}</p>
+          <p className="text-white/70 text-base max-w-md mb-8">{t("browse")}</p>
           <button
-            onClick={() => document.getElementById("products-grid")?.scrollIntoView({ behavior: "smooth" })}
-            className="px-7 py-2.5 bg-[#d4af37] text-[#1e3a5f] rounded-full text-sm font-bold hover:bg-[#e0c040] transition shadow-lg cursor-pointer"
+            onClick={() =>
+              document.getElementById("products-grid")?.scrollIntoView({ behavior: "smooth" })
+            }
+            className="btn btn-accent self-start"
           >
             {t("explore_products")}
           </button>
         </div>
       </section>
 
-      {/* ── STICKY FILTER BAR ── */}
-      <div className="sticky top-[72px] md:top-[116px] z-20 bg-white/95 backdrop-blur-lg border-b border-gray-100 shadow-sm">
+      {/* STICKY FILTER BAR */}
+      <div className="sticky top-[70px] md:top-[122px] z-20 bg-canvas/92 backdrop-blur-lg border-b border-stone-200 shadow-sm">
         <div className="max-w-7xl mx-auto px-4">
-          {/* Main category row */}
           <div className="relative">
             <div className="flex items-center gap-2 overflow-x-auto scrollbar-hide py-3 pr-10">
               {mainCategories.map((cat) => {
@@ -253,41 +248,39 @@ export default function ProductPage() {
                   <button
                     key={cat.key}
                     onClick={() => handleCategorySelect(cat.key)}
-                    className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200
-                      ${active
-                        ? "bg-[#1e3a5f] text-[#d4af37] shadow-md"
-                        : "bg-slate-100 text-[#1e3a5f]/70 hover:bg-[#1e3a5f]/10 hover:text-[#1e3a5f]"
-                      }`}
+                    className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 ${
+                      active
+                        ? "bg-evergreen text-white shadow-sm"
+                        : "bg-stone-100 text-stone-500 hover:bg-mist hover:text-evergreen"
+                    }`}
                   >
                     {cat.key === "all" ? t("all") : t(cat.label)}
                   </button>
                 );
               })}
-              <div className="w-px h-5 bg-gray-200 flex-shrink-0 mx-1" />
+              <div className="w-px h-5 bg-stone-200 flex-shrink-0 mx-1" />
               <button
                 onClick={() => navigate("/favorites")}
-                className="flex-shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-rose-50 text-rose-600 hover:bg-rose-100 transition border border-rose-100"
+                className="flex-shrink-0 flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-semibold whitespace-nowrap bg-clay-soft text-clay hover:bg-clay/15 transition"
               >
-                <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
+                <Heart className="w-3 h-3 fill-clay text-clay" />
                 {t("favorites")}
                 {favorites.length > 0 && (
-                  <span className="bg-rose-500 text-white rounded-full px-1.5 py-0.5 text-[10px] leading-none">
+                  <span className="bg-clay text-white rounded-full px-1.5 py-0.5 text-[10px] leading-none">
                     {favorites.length}
                   </span>
                 )}
               </button>
             </div>
-            {/* Scroll indicator */}
-            <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-white to-transparent pointer-events-none flex items-center justify-end pr-1.5">
-              <ChevronRight className="w-4 h-4 text-slate-300" />
+            <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-canvas to-transparent pointer-events-none flex items-center justify-end pr-1.5">
+              <ChevronRight className="w-4 h-4 text-stone-300" />
             </div>
           </div>
 
-          {/* Sub-category row — only when main category is active */}
           {subCategoryPills.length > 0 && (
-            <div className="relative border-t border-slate-100">
+            <div className="relative border-t border-stone-100">
               <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-hide py-2 pr-10">
-                <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-widest text-slate-400 mr-1">
+                <span className="flex-shrink-0 text-[10px] font-bold uppercase tracking-widest text-stone-400 mr-1">
                   Refine:
                 </span>
                 {subCategoryPills.map((sub) => {
@@ -296,73 +289,78 @@ export default function ProductPage() {
                     <button
                       key={sub.key}
                       onClick={() => handleCategorySelect(sub.key)}
-                      className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap transition-all duration-200
-                        ${active
-                          ? "bg-[#d4af37] text-[#1e3a5f] shadow-sm"
-                          : "bg-slate-50 text-slate-500 border border-slate-200 hover:border-[#d4af37]/50 hover:text-[#1e3a5f]"
-                        }`}
+                      className={`flex-shrink-0 px-3 py-1 rounded-full text-[11px] font-medium whitespace-nowrap transition-all duration-200 ${
+                        active
+                          ? "bg-honey text-white shadow-sm"
+                          : "bg-stone-50 text-stone-500 border border-stone-200 hover:border-honey/50 hover:text-evergreen"
+                      }`}
                     >
                       {t(sub.label)}
                     </button>
                   );
                 })}
               </div>
-              <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-white to-transparent pointer-events-none flex items-center justify-end pr-1.5">
-                <ChevronRight className="w-3.5 h-3.5 text-slate-300" />
+              <div className="absolute right-0 top-0 bottom-0 w-10 bg-gradient-to-l from-canvas to-transparent pointer-events-none flex items-center justify-end pr-1.5">
+                <ChevronRight className="w-3.5 h-3.5 text-stone-300" />
               </div>
             </div>
           )}
         </div>
       </div>
 
-      {/* ── CONTENT ── */}
-      <section id="products-grid" className="max-w-7xl mx-auto px-4 py-8">
-        {/* Toolbar */}
-        <div className="flex items-center justify-between mb-7 flex-wrap gap-3">
-          <div className="text-sm text-slate-500">
+      {/* CONTENT */}
+      <section id="products-grid" className="max-w-7xl mx-auto px-6 py-10">
+        <div className="flex items-center justify-between mb-8 flex-wrap gap-3">
+          <div className="text-sm text-stone-500">
             {loading ? (
               <span className="animate-pulse">Loading products…</span>
             ) : (
               <>
-                <span className="font-bold text-[#1e3a5f] text-base">{filteredProducts.length}</span>
+                <span className="font-display font-bold text-evergreen text-lg">
+                  {filteredProducts.length}
+                </span>
                 <span> product{filteredProducts.length !== 1 ? "s" : ""}</span>
                 {category !== "all" && !searchQuery && (
                   <>
-                    <span className="mx-1.5 text-slate-300">·</span>
-                    <span className="text-[#d4af37] font-semibold">{t(category) || category}</span>
+                    <span className="mx-1.5 text-stone-300">·</span>
+                    <span className="text-honey font-semibold">{t(category) || category}</span>
                   </>
                 )}
                 {searchQuery && (
                   <>
-                    <span className="mx-1.5 text-slate-300">·</span>
-                    <span className="text-slate-600">"{searchQuery}"</span>
+                    <span className="mx-1.5 text-stone-300">·</span>
+                    <span className="text-stone-600">"{searchQuery}"</span>
                   </>
                 )}
               </>
             )}
           </div>
 
-          {/* Sort */}
           <div className="relative" ref={sortRef}>
             <button
               onClick={() => setSortOpen((o) => !o)}
-              className="flex items-center gap-2 px-4 py-2 text-sm font-medium text-[#1e3a5f] bg-white border border-slate-200 rounded-xl hover:border-[#1e3a5f]/40 transition shadow-sm"
+              className="flex items-center gap-2 px-4 py-2.5 text-sm font-medium text-evergreen bg-white border border-stone-200 rounded-full hover:border-evergreen/40 transition shadow-sm"
             >
-              <SlidersHorizontal className="w-3.5 h-3.5 text-[#d4af37]" />
+              <SlidersHorizontal className="w-3.5 h-3.5 text-honey" />
               {activeSortLabel}
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform ${sortOpen ? "rotate-180" : ""}`} />
+              <ChevronDown
+                className={`w-3.5 h-3.5 transition-transform ${sortOpen ? "rotate-180" : ""}`}
+              />
             </button>
             {sortOpen && (
-              <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-slate-100 overflow-hidden z-50 animate-scaleIn">
+              <div className="absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-xl border border-stone-100 overflow-hidden z-50 animate-scaleIn p-1.5">
                 {sortOptions.map((opt) => (
                   <button
                     key={opt.value}
-                    onClick={() => { setSortBy(opt.value); setSortOpen(false); }}
-                    className={`w-full text-left px-4 py-3 text-sm transition
-                      ${sortBy === opt.value
-                        ? "bg-[#1e3a5f] text-[#d4af37] font-semibold"
-                        : "text-[#1e3a5f] hover:bg-slate-50"
-                      }`}
+                    onClick={() => {
+                      setSortBy(opt.value);
+                      setSortOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2.5 text-sm rounded-xl transition ${
+                      sortBy === opt.value
+                        ? "bg-evergreen text-white font-semibold"
+                        : "text-ink hover:bg-mist/60"
+                    }`}
                   >
                     {opt.label}
                   </button>
@@ -372,45 +370,40 @@ export default function ProductPage() {
           </div>
         </div>
 
-        {/* ── SKELETON ── */}
+        {/* SKELETON */}
         {loading && (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {[...Array(8)].map((_, i) => (
-              <div key={i} className="bg-white rounded-2xl overflow-hidden animate-pulse shadow-sm">
-                <div className="aspect-square bg-slate-200" />
+              <div key={i} className="card overflow-hidden animate-pulse">
+                <div className="aspect-square skeleton" />
                 <div className="p-4 space-y-2.5">
-                  <div className="h-4 bg-slate-200 rounded-full w-3/4" />
-                  <div className="h-3 bg-slate-200 rounded-full w-1/2" />
-                  <div className="h-3 bg-slate-200 rounded-full w-2/3" />
-                  <div className="h-9 bg-slate-200 rounded-xl mt-3" />
+                  <div className="h-4 skeleton rounded-full w-3/4" />
+                  <div className="h-3 skeleton rounded-full w-1/2" />
+                  <div className="h-3 skeleton rounded-full w-2/3" />
+                  <div className="h-9 skeleton rounded-xl mt-3" />
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* ── EMPTY ── */}
+        {/* EMPTY */}
         {!loading && filteredProducts.length === 0 && (
           <div className="flex flex-col items-center justify-center py-28 text-center">
-            <div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-5">
-              <SearchX className="w-9 h-9 text-slate-400" />
+            <div className="w-20 h-20 rounded-full bg-stone-100 flex items-center justify-center mb-5">
+              <SearchX className="w-9 h-9 text-stone-400" />
             </div>
-            <h3 className="text-xl font-bold text-[#1e3a5f] mb-2">No products found</h3>
-            <p className="text-slate-400 text-sm mb-7">
-              Try a different category or clear your search
-            </p>
-            <button
-              onClick={() => navigate("/products")}
-              className="px-6 py-2.5 bg-[#1e3a5f] text-white rounded-full text-sm font-semibold hover:bg-[#2a4a7c] transition shadow-md"
-            >
+            <h3 className="font-display text-2xl font-semibold text-ink mb-2">No products found</h3>
+            <p className="text-stone-400 text-sm mb-7">Try a different category or clear your search</p>
+            <button onClick={() => navigate("/products")} className="btn btn-primary">
               View all products
             </button>
           </div>
         )}
 
-        {/* ── GROUPED BY SUBCATEGORY ── */}
+        {/* GROUPED BY SUBCATEGORY */}
         {!loading && filteredProducts.length > 0 && selectedMainCategory && groupedProducts && (
-          <div className="space-y-14">
+          <div className="space-y-16">
             {(selectedMainCategory.items || []).map((item) => {
               const subKey = typeof item === "string" ? item : item.titleKey;
               const subProducts = groupedProducts[subKey];
@@ -418,11 +411,13 @@ export default function ProductPage() {
               return (
                 <div key={subKey}>
                   <div className="flex items-center gap-3 mb-6">
-                    <h2 className="text-lg font-bold text-[#1e3a5f] whitespace-nowrap">{t(subKey)}</h2>
-                    <span className="text-xs font-semibold text-[#d4af37] bg-[#1e3a5f]/8 px-2.5 py-1 rounded-full border border-[#d4af37]/20">
+                    <h2 className="font-display text-2xl font-semibold text-ink whitespace-nowrap">
+                      {t(subKey)}
+                    </h2>
+                    <span className="text-xs font-semibold text-honey bg-honey-soft px-2.5 py-1 rounded-full border border-honey/20">
                       {subProducts.length}
                     </span>
-                    <div className="flex-1 h-px bg-gradient-to-r from-[#d4af37]/30 to-transparent" />
+                    <div className="flex-1 h-px bg-gradient-to-r from-honey/30 to-transparent" />
                   </div>
                   <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                     {subProducts.map((p) => (
@@ -435,7 +430,7 @@ export default function ProductPage() {
           </div>
         )}
 
-        {/* ── FLAT GRID ── */}
+        {/* FLAT GRID */}
         {!loading && filteredProducts.length > 0 && !selectedMainCategory && (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             {filteredProducts.map((p) => (
@@ -444,10 +439,9 @@ export default function ProductPage() {
           </div>
         )}
 
-        {/* Footer count */}
         {!loading && filteredProducts.length > 0 && (
-          <p className="text-center text-slate-400 text-sm mt-12">
-            Showing {filteredProducts.length} of {products.length} products
+          <p className="text-center text-stone-400 text-sm mt-14">
+            {t("showing")} {filteredProducts.length} / {products.length}
           </p>
         )}
       </section>

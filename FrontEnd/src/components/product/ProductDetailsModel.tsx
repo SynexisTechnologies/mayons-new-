@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Product } from "./types";
 import { useCart } from "../../context/CartContext";
 import { useLanguage } from "../../context/LanguageContext";
+import { imageUrl } from "../../utils/imageUrl";
 
 export default function ProductDetailsModal({ product, onClose }: { product: Product; onClose: () => void }) {
   const { addToCart } = useCart();
@@ -22,7 +23,7 @@ export default function ProductDetailsModal({ product, onClose }: { product: Pro
       id: product._id || product.pluNumber,
       pluNumber: product.pluNumber ?? "",
       nameKey: getProductName(product),
-      image: product.image,
+      image: imageUrl(product.image),
       price: product.newPrice ?? product.price ?? 0,
       quantity: qty,
       unit: product.unit,
@@ -51,7 +52,7 @@ export default function ProductDetailsModal({ product, onClose }: { product: Pro
           <div className="grid md:grid-cols-2 gap-0 overflow-y-auto">
             {/* Image */}
             <div className="relative aspect-square bg-slate-50">
-              <img src={product.image} alt={getProductName(product)} className="w-full h-full object-cover" />
+              <img src={imageUrl(product.image)} alt={getProductName(product)} className="w-full h-full object-cover" />
               {hasDiscount && (
                 <span className="absolute top-4 left-4 bg-[#d4af37] text-[#1e3a5f] text-xs font-extrabold px-2.5 py-1 rounded-full">
                   -{product.discount}%

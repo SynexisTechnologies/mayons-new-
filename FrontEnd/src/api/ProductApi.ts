@@ -10,11 +10,11 @@ export const ProductApi = {
     const res = await axiosInstance.get(`/product/${id}`);
     return res.data;
   },
-  create: async (payload: Partial<Product>): Promise<Product> => {
+  create: async (payload: Partial<Product> | FormData): Promise<Product> => {
     const res = await axiosInstance.post("/product", payload);
     return res.data;
   },
-  update: async (id: string, payload: Partial<Product>): Promise<Product> => {
+  update: async (id: string, payload: Partial<Product> | FormData): Promise<Product> => {
     const res = await axiosInstance.put(`/product/update/${id}`, payload);
     return res.data;
   },

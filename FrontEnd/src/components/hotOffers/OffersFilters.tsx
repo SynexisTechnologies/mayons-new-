@@ -1,6 +1,9 @@
 import { useLanguage } from "../../context/LanguageContext";
 
-interface Props { selected: string; setSelected: (v: string) => void; }
+interface Props {
+  selected: string;
+  setSelected: (v: string) => void;
+}
 
 export default function OfferFilters({ selected, setSelected }: Props) {
   const { t } = useLanguage();
@@ -13,14 +16,17 @@ export default function OfferFilters({ selected, setSelected }: Props) {
     { key: "BOGO", label: t("category_bogo") },
   ];
   return (
-    <div className="flex justify-center gap-2 flex-wrap mb-10">
+    <div className="flex justify-center gap-2 flex-wrap mb-12">
       {types.map((item) => (
-        <button key={item.key} onClick={() => setSelected(item.key)}
-          className={`px-5 py-2 rounded-full text-sm font-semibold transition cursor-pointer ${
+        <button
+          key={item.key}
+          onClick={() => setSelected(item.key)}
+          className={`px-5 py-2 rounded-full text-sm font-semibold transition ${
             selected.toUpperCase() === item.key
-              ? "bg-[#1e3a5f] text-[#d4af37] shadow-md"
-              : "bg-white text-[#1e3a5f]/70 border border-slate-200 hover:border-[#1e3a5f]/40 hover:text-[#1e3a5f]"
-          }`}>
+              ? "bg-evergreen text-white shadow-sm"
+              : "bg-white text-stone-500 border border-stone-200 hover:border-evergreen/40 hover:text-evergreen"
+          }`}
+        >
           {item.label}
         </button>
       ))}

@@ -10,11 +10,11 @@ export const productService = {
     return ProductApi.getById(id);
   },
 
-  create: async (payload: Partial<Product>): Promise<Product> => {
+  create: async (payload: Partial<Product> | FormData): Promise<Product> => {
     return ProductApi.create(payload);
   },
 
-  update: async (id: string, payload: Partial<Product>): Promise<Product> => {
+  update: async (id: string, payload: Partial<Product> | FormData): Promise<Product> => {
     return ProductApi.update(id, payload);
   },
 

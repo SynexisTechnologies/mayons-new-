@@ -19,30 +19,30 @@ export default function SeasonalPage() {
   }, []);
 
   return (
-    <section className="bg-[#1e3a5f] py-20 relative overflow-hidden">
-      {/* Subtle background texture */}
-      <div className="absolute inset-0 opacity-5 pointer-events-none">
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-[#d4af37] rounded-full blur-3xl" />
-        <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-[#d4af37] rounded-full blur-3xl" />
+    <section className="relative bg-evergreen py-20 md:py-24 overflow-hidden">
+      {/* Texture */}
+      <div className="absolute inset-0 opacity-[0.08] pointer-events-none">
+        <div className="absolute -top-32 -left-32 w-96 h-96 bg-honey rounded-full blur-3xl" />
+        <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-sage rounded-full blur-3xl" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-4 relative z-10">
-
-        {/* ── Section Header ── */}
-        <div className="text-center mb-12">
-          <div className="inline-flex items-center gap-2 bg-[#d4af37]/20 border border-[#d4af37]/30 text-[#d4af37] px-4 py-1.5 rounded-full text-xs font-bold tracking-[0.15em] uppercase mb-4">
+      <div className="max-w-7xl mx-auto px-6 relative z-10">
+        {/* Header */}
+        <div className="text-center mb-14">
+          <p className="eyebrow text-honey-light justify-center mb-4">
             <Leaf className="w-3.5 h-3.5" />
             Limited Harvest
-          </div>
-          <h2 className="text-3xl md:text-4xl font-extrabold text-white mb-3">
+          </p>
+          <h2 className="font-display text-4xl md:text-5xl font-semibold text-white mb-4">
             Seasonal Collection
           </h2>
-          <p className="text-white/50 text-sm max-w-xl mx-auto">
-            Fresh seasonal products specially selected for this time of the year — limited availability, exclusive deals.
+          <p className="text-white/55 text-[15px] max-w-xl mx-auto leading-relaxed">
+            Fresh seasonal products specially selected for this time of the year — limited
+            availability, exclusive deals.
           </p>
         </div>
 
-        {/* ── Content ── */}
+        {/* Content */}
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-5">
             {[...Array(5)].map((_, i) => (
@@ -68,16 +68,15 @@ export default function SeasonalPage() {
           </div>
         )}
 
-        {/* ── CTA ── */}
-        <div className="text-center mt-12">
+        {/* CTA */}
+        <div className="text-center mt-14">
           <button
             onClick={() => navigate("/offers?type=SEASONAL")}
-            className="inline-flex items-center gap-2 bg-[#d4af37] text-[#1e3a5f] px-7 py-3 rounded-full font-bold hover:bg-[#e0c040] transition shadow-lg cursor-pointer text-sm"
+            className="btn btn-accent"
           >
             View All Seasonal Offers <ArrowRight className="w-4 h-4" />
           </button>
         </div>
-
       </div>
     </section>
   );
