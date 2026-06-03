@@ -9,9 +9,6 @@ import { seedStatus } from "./util/StatusInitializer";
 import { seedAdmin } from "./util/seedAdmin";
 import { seedCategories } from "./util/seedCategories";
 
-const { setServers } = require("node:dns/promises");
-setServers(["1.1.1.1", "8.8.8.8"]);
-
 import CartModel from "./models/CartModel";
 import "./models/VarientModel";
 import "./models/ProductModel";
@@ -51,60 +48,54 @@ app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
 
-const startServer = async () => {
-  app.listen(PORT, async () => {
-    console.log(`Server running on http://localhost:${PORT}`);
+const runDbInitialization = async () => {
+  try {
+    await seedStatus();
+    await seedAdmin();
+    await seedCategories();
 
+    // Ensure cart user unique index does not conflict with null entries
     try {
-      // Only attempt DB-dependent initialization if mongoose is connected
-      const mongooseModule = await import("mongoose");
-      // `import()` returns a module namespace; the default export may be under `.default`
-      const mongoose = (mongooseModule as any).default || mongooseModule;
-      if (
-        mongoose &&
-        mongoose.connection &&
-        mongoose.connection.readyState === 1
-      ) {
-        await seedStatus();
-        await seedAdmin();
-        await seedCategories();
-
-        // Ensure cart user unique index does not conflict with null entries
-        try {
-          const coll = CartModel.collection;
-          try {
-            await coll.dropIndex("user_1");
-          } catch (e) {
-            /* ignore if not exists */
-          }
-          await coll.createIndex(
-            { user: 1 },
-            {
-              unique: true,
-              partialFilterExpression: {
-                user: { $exists: true },
-                status: "ACTIVE",
-              },
-            },
-          );
-          console.log("✅ Cart user index ensured");
-        } catch (e) {
-          console.error("Failed to ensure cart index", e);
-        }
-      } else {
-        console.warn("MongoDB not connected — skipping DB initialization");
+      const coll = CartModel.collection;
+      try {
+        await coll.dropIndex("user_1");
+      } catch (e) {
+        /* ignore if not exists */
       }
+      await coll.createIndex(
+        { user: 1 },
+        {
+          unique: true,
+          partialFilterExpression: {
+            user: { $exists: true },
+            status: "ACTIVE",
+          },
+        },
+      );
+      console.log("✅ Cart user index ensured");
     } catch (e) {
-      console.warn("DB initialization skipped:", (e as Error).message || e);
+      console.error("Failed to ensure cart index", e);
     }
-  });
+  } catch (e) {
+    console.warn("DB initialization skipped:", (e as Error).message || e);
+  }
 };
 
-// Attempt to connect to DB but start server even if DB connection fails after retries
+// Start listening immediately so the reverse proxy always has an upstream —
+// a slow or failing DB connection must never make the server unreachable (502).
+app.listen(PORT, () => {
+  console.log(`Server running on http://localhost:${PORT}`);
+});
+
+// Connect to the DB in the background; run seed/initialization once connected.
 connectDB()
-  .then(() => startServer())
+  .then(() => runDbInitialization())
   .catch((err) => {
     console.warn("Could not connect to MongoDB:", err.message || err);
-    // Start server regardless so frontend dev work can continue
-    startServer();
   });
+
+// Don't let an unhandled DB/network rejection take the whole process down
+// (pm2 would restart it and reopen the 502 window on every blip).
+process.on("unhandledRejection", (reason) => {
+  console.error("Unhandled promise rejection:", reason);
+});
