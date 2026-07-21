@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { NavLink, Outlet, useNavigate } from "react-router-dom";
 import {
-  LayoutDashboard, Package, ClipboardList, Users,
+  LayoutDashboard, Package, ClipboardList, Users, FolderTree,
   FileText, Tag, ExternalLink, LogOut, Menu, X,
 } from "lucide-react";
 import Logo from "../components/Logo";
@@ -10,6 +10,7 @@ import { useAuth } from "../context/AuthContext";
 const NAV = [
   { to: "/admin", end: true, label: "Overview", icon: LayoutDashboard },
   { to: "/admin/products", label: "Products", icon: Package },
+  { to: "/admin/categories", label: "Categories", icon: FolderTree },
   { to: "/admin/orders", label: "Orders", icon: ClipboardList },
   { to: "/admin/users", label: "Users", icon: Users },
 ];

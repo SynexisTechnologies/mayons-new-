@@ -9,9 +9,12 @@ export const checkoutCart = async (req: Request, res: Response, next: NextFuncti
     const userId = req.user?.id;
     if (!userId) return res.status(401).json({ success: false, message: "Unauthorized" });
 
-    const { addressId, paymentMethod, deliveryType, expectedDate } = req.body;
+    const { addressId, paymentMethod, deliveryType, expectedDate, recipient, deliveryFee } = req.body;
 
     if (!addressId) return res.status(400).json({ success: false, message: "Address is required" });
+    if (!recipient?.name || !recipient?.phone) {
+      return res.status(400).json({ success: false, message: "Recipient name and phone are required" });
+    }
 
     // Try to find cart by user ObjectId first; if not found, fall back to userEmail (for carts created when client sent email only)
     let cart = await CartModel.findOne({ user: userId, status: "ACTIVE" }).populate("items.product items.variant");
@@ -32,6 +35,7 @@ export const checkoutCart = async (req: Request, res: Response, next: NextFuncti
     for (const item of cart.items) {
       const product = await ProductModel.findById(item.product);
       if (!product) return res.status(404).json({ success: false, message: "Product not found" });
+      if (product.isSoldOut) return res.status(400).json({ success: false, message: `${product.nameEn} is sold out` });
       if (product.stock < item.quantity) return res.status(400).json({ success: false, message: `${product.nameEn} does not have enough stock` });
 
       product.stock -= item.quantity;
@@ -42,7 +46,10 @@ export const checkoutCart = async (req: Request, res: Response, next: NextFuncti
       await product.save();
     }
 
-    const totalPrice = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const subtotal = cart.items.reduce((sum, item) => sum + item.price * item.quantity, 0);
+    const fee = Number(deliveryFee) || 0;
+    // totalPrice is what the customer is actually charged — goods plus delivery
+    const totalPrice = subtotal + fee;
 
     // create order
    const order = await OrderModel.create({
@@ -56,7 +63,9 @@ export const checkoutCart = async (req: Request, res: Response, next: NextFuncti
         price: i.price,
       })),
       totalPrice,
+      deliveryFee: fee,
       address: addressId,
+      recipient,
       paymentMethod,
     });
 
@@ -219,7 +228,9 @@ export const getSummary = async (req: Request, res: Response, next: NextFunction
 
     const totalProducts = await ProductModel.countDocuments();
 
-    const soldOut = await ProductModel.countDocuments({ stock: { $lt: 1 } });
+    const soldOut = await ProductModel.countDocuments({
+      $or: [{ isSoldOut: true }, { stock: { $lt: 1 } }],
+    });
 
     const soldPercentage =
       totalProducts === 0

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { productService } from "../../services/ProductServices";
 import { Product } from "../product/types";
-import { getAllcat, getSubcatByCategory, SubCategory } from "../../services/CategoryServices";
+import { getAllcat, getSubcatByCategory, getSubCategory1BySubCategory, SubCategory, SubCategory1 } from "../../services/CategoryServices";
 import { Category } from "../../types/Category";
 import { imageUrl } from "../../utils/imageUrl";
 
@@ -17,15 +17,16 @@ const L = "block text-sm font-semibold mb-1.5 text-gray-700";
 
 export default function ProductForm({ fetchProducts, editingProduct, setEditingProduct, onClose }: Props) {
   const initial: Partial<Product> = {
-    pluNumber: "", nameEn: "", nameSi: "", category: "", subCategory: "",
+    pluNumber: "", nameEn: "", nameSi: "", category: "", subCategory: "", subCategory1: "",
     image: "", descriptionEn: "", descriptionSi: "", unit: "",
-    oldPrice: 0, newPrice: 0, discount: 0, sizes: [], colors: [],
-    isActive: true, stock: 0,
+    cost: 0, oldPrice: 0, newPrice: 0, discount: 0, sizes: [], colors: [],
+    isActive: true, isSoldOut: false, stock: 0,
   };
 
   const [form, setForm] = useState<Partial<Product>>(initial);
   const [dbCategories, setDbCategories] = useState<Category[]>([]);
   const [filteredSubs, setFilteredSubs] = useState<SubCategory[]>([]);
+  const [filteredSubs1, setFilteredSubs1] = useState<SubCategory1[]>([]);
   const [formError, setFormError] = useState("");
   const [formSuccess, setFormSuccess] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -82,6 +83,18 @@ export default function ProductForm({ fetchProducts, editingProduct, setEditingP
     }
   }, [form.category, dbCategories]);
 
+  // Load sub-subcategories (Sub category 1) when subCategory changes
+  useEffect(() => {
+    const subObj = filteredSubs.find((s) => s.name === form.subCategory);
+    if (subObj?._id) {
+      getSubCategory1BySubCategory(subObj._id)
+        .then(setFilteredSubs1)
+        .catch(() => setFilteredSubs1([]));
+    } else {
+      setFilteredSubs1([]);
+    }
+  }, [form.subCategory, filteredSubs]);
+
   // Auto-calculate discount
   useEffect(() => {
     const old = Number(form.oldPrice);
@@ -125,15 +138,18 @@ export default function ProductForm({ fetchProducts, editingProduct, setEditingP
       fd.append("nameSi", form.nameSi);
       fd.append("category", form.category);
       if (form.subCategory) fd.append("subCategory", form.subCategory);
+      if (form.subCategory1) fd.append("subCategory1", form.subCategory1);
       fd.append("descriptionEn", form.descriptionEn);
       fd.append("descriptionSi", form.descriptionSi);
       if (form.unit) fd.append("unit", form.unit);
+      fd.append("cost", String(Number(form.cost) || 0));
       fd.append("oldPrice", String(Number(form.oldPrice) || 0));
       fd.append("newPrice", String(Number(form.newPrice) || 0));
       fd.append("stock", String(Number(form.stock) || 0));
       fd.append("sizes", JSON.stringify(isClothing ? form.sizes || [] : []));
       fd.append("colors", JSON.stringify(isClothing ? form.colors || [] : []));
       fd.append("isActive", String(form.isActive ?? true));
+      fd.append("isSoldOut", String(form.isSoldOut ?? false));
 
       // New file → upload it; otherwise keep the existing image filename (edit case)
       if (imageFile) {
@@ -245,13 +261,27 @@ export default function ProductForm({ fetchProducts, editingProduct, setEditingP
 
               <div>
                 <label className={L}>Sub Category</label>
-                <select value={form.subCategory || ""} onChange={(e) => setForm({ ...form, subCategory: e.target.value })}
+                <select value={form.subCategory || ""} onChange={(e) => setForm({ ...form, subCategory: e.target.value, subCategory1: "" })}
                   className={`${F} disabled:bg-gray-100 disabled:text-gray-400`}
                   disabled={!form.category || filteredSubs.length === 0}>
                   <option value="">
                     {!form.category ? "Select a category first" : filteredSubs.length === 0 ? "No sub-categories" : "Select Sub Category"}
                   </option>
                   {filteredSubs.map((sub) => (
+                    <option key={sub._id} value={sub.name}>{sub.name}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label className={L}>Sub Category 1</label>
+                <select value={form.subCategory1 || ""} onChange={(e) => setForm({ ...form, subCategory1: e.target.value })}
+                  className={`${F} disabled:bg-gray-100 disabled:text-gray-400`}
+                  disabled={!form.subCategory || filteredSubs1.length === 0}>
+                  <option value="">
+                    {!form.subCategory ? "Select a sub category first" : filteredSubs1.length === 0 ? "No sub-categories" : "Select Sub Category 1"}
+                  </option>
+                  {filteredSubs1.map((sub) => (
                     <option key={sub._id} value={sub.name}>{sub.name}</option>
                   ))}
                 </select>
@@ -286,15 +316,21 @@ export default function ProductForm({ fetchProducts, editingProduct, setEditingP
           <section className="bg-gray-50 p-6 rounded-2xl space-y-5">
             <h3 className="text-base font-bold text-[#1e3a5f] border-b border-gray-200 pb-2">Pricing & Inventory</h3>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-5">
               <div>
-                <label className={L}>Old Price (Rs) *</label>
+                <label className={L}>Cost (Rs)</label>
+                <input type="number" value={form.cost || ""} onChange={(e) => setForm({ ...form, cost: Number(e.target.value) })}
+                  className={F} min="0" placeholder="0" />
+              </div>
+
+              <div>
+                <label className={L}>MRP Price (Rs) *</label>
                 <input type="number" value={form.oldPrice || ""} onChange={(e) => setForm({ ...form, oldPrice: Number(e.target.value) })}
                   className={F} min="0" placeholder="0" />
               </div>
 
               <div>
-                <label className={L}>New Price (Rs) *</label>
+                <label className={L}>Our Price (Rs) *</label>
                 <input type="number" value={form.newPrice || ""} onChange={(e) => setForm({ ...form, newPrice: Number(e.target.value) })}
                   className={F} min="0" placeholder="0" />
               </div>
@@ -337,13 +373,24 @@ export default function ProductForm({ fetchProducts, editingProduct, setEditingP
           )}
 
           {/* STATUS */}
-          <div className="flex items-center gap-3 bg-gray-50 px-5 py-4 rounded-2xl">
-            <input type="checkbox" id="isActive" checked={form.isActive ?? true}
-              onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
-              className="w-5 h-5 accent-[#1e3a5f]" />
-            <label htmlFor="isActive" className="text-sm font-semibold text-gray-700 select-none">
-              Product Active — visible to customers
-            </label>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex items-center gap-3 bg-gray-50 px-5 py-4 rounded-2xl flex-1">
+              <input type="checkbox" id="isActive" checked={form.isActive ?? true}
+                onChange={(e) => setForm({ ...form, isActive: e.target.checked })}
+                className="w-5 h-5 accent-[#1e3a5f]" />
+              <label htmlFor="isActive" className="text-sm font-semibold text-gray-700 select-none">
+                Product Active — visible to customers
+              </label>
+            </div>
+
+            <div className="flex items-center gap-3 bg-red-50 px-5 py-4 rounded-2xl flex-1">
+              <input type="checkbox" id="isSoldOut" checked={form.isSoldOut ?? false}
+                onChange={(e) => setForm({ ...form, isSoldOut: e.target.checked })}
+                className="w-5 h-5 accent-red-600" />
+              <label htmlFor="isSoldOut" className="text-sm font-semibold text-red-700 select-none">
+                Mark as Sold Out
+              </label>
+            </div>
           </div>
 
           {/* FEEDBACK */}

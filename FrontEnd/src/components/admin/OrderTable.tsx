@@ -89,9 +89,10 @@ export default function OrdersTable() {
           <table className="min-w-full text-sm">
             <thead>
               <tr className="bg-[#1e3a5f]/5 text-[#1e3a5f] text-xs font-semibold uppercase tracking-wide">
-                <th className="px-5 py-3 text-left">Customer</th>
+                <th className="px-5 py-3 text-left">Recipient</th>
                 <th className="px-4 py-3 text-left">Phone</th>
                 <th className="px-4 py-3 text-left">Address</th>
+                <th className="px-4 py-3 text-left">Delivery</th>
                 <th className="px-4 py-3 text-right">Total</th>
                 <th className="px-4 py-3 text-center">Status</th>
                 <th className="px-4 py-3 text-center">Update</th>
@@ -102,16 +103,35 @@ export default function OrdersTable() {
               {filteredOrders.map((order) => (
                 <tr key={order._id} className="hover:bg-gray-50 transition">
                   <td className="px-5 py-3.5 font-medium text-gray-800">
-                    {order.user?.name || "Guest"}
+                    {order.recipient?.name || order.user?.name || "Guest"}
+                    {order.recipient?.senderName && (
+                      <span className="block text-xs text-gray-400 font-normal">
+                        from {order.recipient.senderName}
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3.5 text-gray-500">
-                    {order.user?.phone || "—"}
+                    {order.recipient?.phone || order.user?.phone || "—"}
                   </td>
                   <td className="px-4 py-3.5 text-gray-500 max-w-[180px] truncate">
-                    {order.shippingAddress?.address || order.address || "No Address"}
+                    {order.recipient?.address || order.shippingAddress?.address || order.address || "No Address"}
+                    {order.recipient?.city && (
+                      <span className="block text-xs text-gray-400">{order.recipient.city}</span>
+                    )}
+                  </td>
+                  <td className="px-4 py-3.5 text-gray-500 whitespace-nowrap">
+                    {order.recipient?.deliveryDate || "—"}
+                    {order.recipient?.deliveryTimeSlot && (
+                      <span className="block text-xs text-gray-400">{order.recipient.deliveryTimeSlot}</span>
+                    )}
                   </td>
                   <td className="px-4 py-3.5 text-right font-semibold text-[#1e3a5f]">
                     Rs {order.totalPrice?.toLocaleString()}
+                    {!!order.deliveryFee && (
+                      <span className="block text-xs text-gray-400 font-normal">
+                        incl. Rs {order.deliveryFee} delivery
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3.5 text-center">
                     <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-semibold border ${STATUS_STYLES[order.status] || "bg-gray-100 text-gray-600"}`}>
@@ -132,7 +152,7 @@ export default function OrdersTable() {
 
               {filteredOrders.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="text-center py-14 text-gray-400 text-sm">
+                  <td colSpan={7} className="text-center py-14 text-gray-400 text-sm">
                     No orders found
                   </td>
                 </tr>

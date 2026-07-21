@@ -12,8 +12,8 @@ export default function AdminOverview() {
     getProducts().then(setProducts).catch(() => {});
   }, []);
 
-  const soldOut = products.filter((p) => p.stock <= 0).length;
-  const lowStock = products.filter((p) => p.stock > 0 && p.stock <= 5).length;
+  const soldOut = products.filter((p) => p.isSoldOut || p.stock <= 0).length;
+  const lowStock = products.filter((p) => !p.isSoldOut && p.stock > 0 && p.stock <= 5).length;
 
   return (
     <div className="space-y-5">

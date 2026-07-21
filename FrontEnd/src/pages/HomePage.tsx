@@ -2,19 +2,14 @@ import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import {
   ArrowRight,
-  Sparkles,
-  TrendingUp,
-  Award,
-  Leaf,
   ChevronLeft,
   ChevronRight,
   Truck,
-  ShieldCheck,
-  Sprout,
+  MapPin,
+  Clock,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../context/LanguageContext";
-import SeasonalPage from "../pages/SeasonalPage";
 import TrendingCategories from "./TrendingCategories";
 import BestOffer from "../components/product/BestOffer";
 import { megaCategories } from "../data/categories";
@@ -48,10 +43,10 @@ const FALLBACK_IMG = "https://images.unsplash.com/photo-1542838132-92c53300491e?
 const heroImages = [hero1, hero2, hero3, hero4];
 
 const heroSlides = [
-  { label: "Clothing & Apparel", badge: "NEW ARRIVALS" },
-  { label: "Grocery & Essentials", badge: "DAILY FRESH" },
-  { label: "Natural Lifestyle", badge: "PURE ORGANIC" },
-  { label: "Vegetables & Fruits", badge: "FARM FRESH" },
+  { label: "Clothing & Apparel", badge: "NEW ARRIVALS", title: "Clothing", tagline: "Your style starts here", categoryKey: "clothing" },
+  { label: "Grocery & Essentials", badge: "DAILY FRESH", title: "Grocery", tagline: "Shop fresh. Live better", categoryKey: "groceryShop" },
+  { label: "Natural Lifestyle", badge: "PURE ORGANIC", title: "Natural Lifestyle", tagline: "Everything at your fingertips", categoryKey: null },
+  { label: "Vegetables & Fruits", badge: "FARM FRESH", title: "Vegetables & Fruits", tagline: "The art of nature", categoryKey: "vegetablesFruits" },
 ];
 
 export default function HomePage() {
@@ -81,15 +76,6 @@ export default function HomePage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slide]);
 
-  const marqueeItems = [
-    t("featureOrganic"),
-    t("featurePrice"),
-    t("featureQuality"),
-    "Farm to Table",
-    "Eco Packaging",
-    "Island-wide Delivery",
-  ];
-
   return (
     <>
       {/* ═══════════════════════════ HERO ═══════════════════════════ */}
@@ -117,19 +103,6 @@ export default function HomePage() {
         {/* Content — editorial left-aligned */}
         <div className="relative z-20 h-full max-w-7xl mx-auto px-6 flex flex-col justify-center pt-[100px] md:pt-[122px]">
           <div className="max-w-2xl text-white">
-            <motion.div
-              key={`badge-${slide}`}
-              initial={{ opacity: 0, y: 14 }}
-              animate={{ opacity: transitioning ? 0 : 1, y: transitioning ? 14 : 0 }}
-              transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-              className="inline-flex items-center gap-2 glass-dark px-4 py-2 rounded-full mb-6"
-            >
-              <Sparkles className="w-4 h-4 text-honey-light" />
-              <span className="text-honey-light text-[11px] font-bold tracking-[0.22em] uppercase">
-                {heroSlides[slide].badge}
-              </span>
-            </motion.div>
-
             <motion.p
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
@@ -140,23 +113,25 @@ export default function HomePage() {
             </motion.p>
 
             <motion.h1
+              key={`title-${slide}`}
               initial={{ opacity: 0, y: 24 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+              animate={{ opacity: transitioning ? 0 : 1, y: transitioning ? 24 : 0 }}
+              transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
               className="font-display text-5xl md:text-7xl lg:text-[5.2rem] font-semibold leading-[1.02] tracking-tight mb-5"
             >
               <span className="text-gradient-gold drop-shadow-sm">
-                {t("heroTitleHighlight")}
+                {heroSlides[slide].title}
               </span>
             </motion.h1>
 
             <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.18 }}
-              className="text-white/75 text-base md:text-lg max-w-xl leading-relaxed mb-9 text-pretty"
+              key={`tagline-${slide}`}
+              initial={{ opacity: 0, y: 14 }}
+              animate={{ opacity: transitioning ? 0 : 1, y: transitioning ? 14 : 0 }}
+              transition={{ duration: 0.55, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
+              className="font-display text-honey-light text-xl md:text-3xl font-medium mb-9 text-pretty"
             >
-              {t("heroDescription")}
+              {heroSlides[slide].tagline}
             </motion.p>
 
             <motion.div
@@ -165,34 +140,18 @@ export default function HomePage() {
               transition={{ duration: 0.7, delay: 0.26 }}
               className="flex flex-wrap gap-3.5 mb-12"
             >
-              <button onClick={() => navigate("/products")} className="btn btn-accent text-base">
+              <button
+                onClick={() =>
+                  navigate(
+                    heroSlides[slide].categoryKey
+                      ? `/products?category=${heroSlides[slide].categoryKey!.toLowerCase()}`
+                      : "/products"
+                  )
+                }
+                className="btn btn-accent text-base"
+              >
                 {t("exploreMore")} <ArrowRight size={18} />
               </button>
-              <button onClick={() => navigate("/signup")} className="btn btn-light text-base">
-                {t("register1")}
-              </button>
-            </motion.div>
-
-            {/* Feature chips */}
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.7, delay: 0.34 }}
-              className="flex flex-wrap gap-3 max-w-lg"
-            >
-              {[
-                { icon: <Sprout className="w-4 h-4" />, label: t("featureOrganic") },
-                { icon: <TrendingUp className="w-4 h-4" />, label: t("featurePrice") },
-                { icon: <Award className="w-4 h-4" />, label: t("featureQuality") },
-              ].map(({ icon, label }) => (
-                <div
-                  key={label}
-                  className="flex items-center gap-2 glass-dark rounded-full px-4 py-2.5"
-                >
-                  <span className="text-honey-light">{icon}</span>
-                  <p className="text-[12.5px] font-semibold text-white/90">{label}</p>
-                </div>
-              ))}
             </motion.div>
           </div>
         </div>
@@ -278,36 +237,24 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* ═══════════════════════ MARQUEE STRIP ═══════════════════════ */}
-      <div className="bg-evergreen text-white py-3.5 overflow-hidden border-y border-white/10">
-        <div className="flex w-max animate-marquee">
-          {[...marqueeItems, ...marqueeItems].map((item, i) => (
-            <span key={i} className="flex items-center gap-3 px-8 text-sm font-medium whitespace-nowrap">
-              <Leaf className="w-4 h-4 text-honey-light" />
-              {item}
-            </span>
-          ))}
-        </div>
-      </div>
-
       {/* ═══════════════════════ VALUE PROPS ═══════════════════════ */}
       <section className="bg-canvas py-14 border-b border-stone-200/70">
         <div className="max-w-7xl mx-auto px-6 grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {[
             {
               icon: <Truck className="w-6 h-6" />,
-              title: "Island-wide Delivery",
-              text: "Fresh to your doorstep, Colombo same-day available.",
+              title: "Shipping",
+              text: "Delivery starts from Rs. 500.00",
             },
             {
-              icon: <ShieldCheck className="w-6 h-6" />,
-              title: "Certified Organic",
-              text: "Every product meets international organic standards.",
+              icon: <MapPin className="w-6 h-6" />,
+              title: "Delivery Area",
+              text: "Grocery items are delivered within Colombo only.",
             },
             {
-              icon: <Sprout className="w-6 h-6" />,
-              title: "Farm Direct",
-              text: "Sourced straight from trusted local farmers.",
+              icon: <Clock className="w-6 h-6" />,
+              title: "Delivery Time",
+              text: "We deliver within 48 hours.",
             },
           ].map((f) => (
             <motion.div
@@ -331,7 +278,6 @@ export default function HomePage() {
       </section>
 
       {/* ═══════════════════════ SUB SECTIONS ═══════════════════════ */}
-      <SeasonalPage />
       <TrendingCategories />
       <BestOffer />
     </>

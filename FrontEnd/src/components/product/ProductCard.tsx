@@ -20,7 +20,10 @@ export default function ProductCard({ product, onViewDetails }: Props) {
   const isFavorite = favorites.some(
     (item) => item.type === "product" && item.data._id === product._id
   );
-  const inStock = product.stock >= 1;
+  // An admin can flag a product Sold Out regardless of the stock count
+  const soldOut = !!product.isSoldOut;
+  const inStock = !soldOut && product.stock >= 1;
+  const unavailableLabel = soldOut ? t("soldOut") : t("outOfStock");
   const hasDiscount = !!product.discount && product.discount > 0;
 
   const productName =
@@ -66,8 +69,8 @@ export default function ProductCard({ product, onViewDetails }: Props) {
 
         {!inStock && (
           <div className="absolute inset-0 bg-canvas/60 backdrop-blur-[2px] flex items-center justify-center">
-            <span className="bg-ink text-white text-xs font-bold px-3 py-1.5 rounded-full tracking-wide">
-              {t("outOfStock")}
+            <span className={`text-white text-xs font-bold px-3 py-1.5 rounded-full tracking-wide ${soldOut ? "bg-clay" : "bg-ink"}`}>
+              {unavailableLabel}
             </span>
           </div>
         )}
@@ -182,7 +185,7 @@ export default function ProductCard({ product, onViewDetails }: Props) {
           }`}
         >
           {!inStock ? (
-            t("outOfStock")
+            unavailableLabel
           ) : added ? (
             <>
               <Check className="w-4 h-4" /> Added

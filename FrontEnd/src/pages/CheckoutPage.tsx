@@ -18,6 +18,7 @@ interface CheckoutFormData {
   deliveryDate: string;
   deliveryTimeSlot: string;
   deliveryInstructions: string;
+  senderName: string;
 }
 
 const inputCls =
@@ -41,6 +42,7 @@ export default function CheckoutPage({ items, onBack }: Props) {
     deliveryDate: "",
     deliveryTimeSlot: "",
     deliveryInstructions: "",
+    senderName: "",
   });
 
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
@@ -78,6 +80,20 @@ export default function CheckoutPage({ items, onBack }: Props) {
         paymentMethod: "CASH_ON_DELIVERY",
         deliveryType: "HOME_DELIVERY",
         expectedDate: formData.deliveryDate,
+        deliveryFee: DELIVERY_FEE,
+        // Everything the recipient section collects — previously dropped on submit
+        recipient: {
+          name: formData.name,
+          phone: formData.phone,
+          address: formData.address,
+          city: formData.city,
+          locationType: formData.locationType,
+          deliveryDate: formData.deliveryDate,
+          deliveryTimeSlot: formData.deliveryTimeSlot,
+          deliveryInstructions: formData.deliveryInstructions,
+          senderName: formData.senderName,
+          sendAlerts: formData.sendAlerts,
+        },
       };
       await placeOrder(orderPayload);
       setOrderStatus("success");
@@ -136,6 +152,7 @@ export default function CheckoutPage({ items, onBack }: Props) {
         <form onSubmit={handleSubmit} className="grid lg:grid-cols-3 gap-8">
           {/* LEFT */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Recipient Information */}
             <div className="card p-7">
               <div className="flex items-center gap-2.5 mb-6">
                 <div className="w-9 h-9 rounded-xl bg-mist flex items-center justify-center">
@@ -145,20 +162,22 @@ export default function CheckoutPage({ items, onBack }: Props) {
               </div>
 
               <div className="space-y-4">
-                <div>
-                  <label className={labelCls}>
-                    {t("Name")} <span className="text-clay">*</span>
-                  </label>
-                  <input type="text" name="name" value={formData.name} onChange={handleChange} className={inputCls} />
-                  {errors.name && <p className="text-clay text-xs mt-1">{errors.name}</p>}
-                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className={labelCls}>
+                      {t("Name")} <span className="text-clay">*</span>
+                    </label>
+                    <input type="text" name="name" value={formData.name} onChange={handleChange} className={inputCls} />
+                    {errors.name && <p className="text-clay text-xs mt-1">{errors.name}</p>}
+                  </div>
 
-                <div>
-                  <label className={labelCls}>
-                    {t("PhoneNo")} <span className="text-clay">*</span>
-                  </label>
-                  <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className={inputCls} />
-                  {errors.phone && <p className="text-clay text-xs mt-1">{errors.phone}</p>}
+                  <div>
+                    <label className={labelCls}>
+                      {t("PhoneNo")} <span className="text-clay">*</span>
+                    </label>
+                    <input type="tel" name="phone" value={formData.phone} onChange={handleChange} className={inputCls} />
+                    {errors.phone && <p className="text-clay text-xs mt-1">{errors.phone}</p>}
+                  </div>
                 </div>
 
                 <label className="flex items-center gap-2.5 cursor-pointer">
@@ -171,17 +190,33 @@ export default function CheckoutPage({ items, onBack }: Props) {
                   />
                   <span className="text-sm text-stone-600">{t("Send_Order_Alerts")}</span>
                 </label>
+              </div>
+            </div>
 
+            {/* Address Details */}
+            <div className="card p-7">
+              <h2 className="font-display text-xl font-semibold text-ink mb-6">{t("Address_Details")}</h2>
+
+              <div className="space-y-4">
                 <div>
                   <label className={labelCls}>
                     {t("Delivery_Add")} <span className="text-clay">*</span>
                   </label>
-                  <input type="text" name="address" value={formData.address} onChange={handleChange} className={inputCls} />
+                  <textarea
+                    name="address"
+                    value={formData.address}
+                    onChange={handleChange}
+                    rows={2}
+                    className={inputCls}
+                  />
                   {errors.address && <p className="text-clay text-xs mt-1">{errors.address}</p>}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
+                    <label className={labelCls}>
+                      {t("City")} <span className="text-clay">*</span>
+                    </label>
                     <input
                       type="text"
                       name="city"
@@ -193,10 +228,18 @@ export default function CheckoutPage({ items, onBack }: Props) {
                     {errors.city && <p className="text-clay text-xs mt-1">{errors.city}</p>}
                   </div>
                   <div>
+                    <label className={labelCls}>
+                      {t("Location_Type")} <span className="text-clay">*</span>
+                    </label>
                     <select name="locationType" value={formData.locationType} onChange={handleChange} className={inputCls}>
                       <option value="">{t("Select_Option")}</option>
-                      <option value="home">{t("home1")}</option>
+                      <option value="house">{t("house")}</option>
+                      <option value="apartment">{t("apartment")}</option>
                       <option value="office">{t("office")}</option>
+                      <option value="hospital">{t("hospital")}</option>
+                      <option value="school">{t("school")}</option>
+                      <option value="funeralHome">{t("funeralHome")}</option>
+                      <option value="weddingReception">{t("weddingReception")}</option>
                       <option value="other">{t("other")}</option>
                     </select>
                     {errors.locationType && <p className="text-clay text-xs mt-1">{errors.locationType}</p>}
@@ -248,6 +291,18 @@ export default function CheckoutPage({ items, onBack }: Props) {
                     className={inputCls}
                   />
                   <p className="text-clay/80 text-xs mt-1">{t("No_Special_Time_Request")}</p>
+                </div>
+
+                <div>
+                  <label className={labelCls}>{t("Sender_Name")}</label>
+                  <input
+                    type="text"
+                    name="senderName"
+                    value={formData.senderName}
+                    onChange={handleChange}
+                    placeholder={t("Your_Name")}
+                    className={inputCls}
+                  />
                 </div>
               </div>
             </div>

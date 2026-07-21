@@ -6,13 +6,16 @@ export interface IProduct extends Document {
   nameSi: string;
   category: Types.ObjectId;
   subCategory?: Types.ObjectId;
+  subCategory1?: Types.ObjectId;
   descriptionEn: string;
   descriptionSi: string;
   image: string;
   unit?: string;
+  cost?: number;
   oldPrice: number;
   newPrice: number;
   discount?: number;
+  isSoldOut?: boolean;
   rating?: number;
   reviews?: number;
   sizes?: string[];
@@ -29,13 +32,16 @@ const ProductSchema = new Schema<IProduct>(
     nameSi: { type: String, required: true },
     category: { type: Schema.Types.ObjectId, ref: "Category", required: true },
     subCategory: { type: Schema.Types.ObjectId, ref: "SubCategory" },
+    subCategory1: { type: Schema.Types.ObjectId, ref: "SubCategory1" },
     descriptionEn: { type: String, required: true },
     descriptionSi: { type: String, required: true },
     image: { type: String, required: true },
     unit: { type: String },
+    cost: { type: Number, default: 0 },
     oldPrice: { type: Number, required: true },
     newPrice: { type: Number, required: true },
     discount: { type: Number, default: 0 },
+    isSoldOut: { type: Boolean, default: false },
     rating: { type: Number, default: 0 },
     reviews: { type: Number, default: 0 },
     sizes: { type: [String], default: [] },

@@ -1,4 +1,4 @@
-import { Facebook, Instagram, Twitter, MapPin, Phone, Mail, ArrowRight, Send } from "lucide-react";
+import { Facebook, Instagram, Twitter, MapPin, Phone, Mail, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLanguage } from "../../context/LanguageContext";
 import Logo from "../Logo";
@@ -15,34 +15,8 @@ export default function Footer() {
         <div className="absolute -bottom-32 right-0 w-[28rem] h-[28rem] bg-sage rounded-full blur-3xl" />
       </div>
 
-      {/* Newsletter band */}
-      <div className="relative max-w-7xl mx-auto px-6 pt-16">
-        <div className="rounded-3xl bg-white/[0.06] border border-white/10 backdrop-blur-sm p-8 md:p-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div className="max-w-md">
-            <p className="eyebrow text-honey-light mb-2">Stay Fresh</p>
-            <h3 className="font-display text-2xl md:text-3xl font-semibold leading-tight">
-              Get fresh drops & exclusive organic offers
-            </h3>
-          </div>
-          <form
-            onSubmit={(e) => e.preventDefault()}
-            className="flex w-full md:w-auto items-center bg-white rounded-full p-1.5 pl-5 max-w-md md:min-w-[380px]"
-          >
-            <Mail className="w-4 h-4 text-stone-400 shrink-0" />
-            <input
-              type="email"
-              placeholder="your@email.com"
-              className="flex-1 bg-transparent px-3 py-2 text-sm text-ink outline-none placeholder-stone-400"
-            />
-            <button type="submit" className="btn btn-accent text-sm py-2.5 px-5">
-              <Send className="w-4 h-4" />
-            </button>
-          </form>
-        </div>
-      </div>
-
       {/* Main grid */}
-      <div className="relative max-w-7xl mx-auto px-6 pt-14 pb-8">
+      <div className="relative max-w-7xl mx-auto px-6 pt-16 pb-8">
         <div className="grid gap-10 grid-cols-2 lg:grid-cols-5 mb-12">
           {/* Brand */}
           <div className="col-span-2 lg:col-span-1">
@@ -126,7 +100,7 @@ export default function Footer() {
         </div>
 
         <div className="border-t border-white/10 pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-white/40">
-          <p>© 2026 Mayan&apos;s Organic Products. {t("allRightsReserved")}.</p>
+          <p>© 2026 Mayons Online Shopping for Sri Lanka. {t("allRightsReserved")}.</p>
           <p>
             Developed by{" "}
             <a

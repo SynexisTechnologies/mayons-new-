@@ -6,6 +6,7 @@ import ProductModel from "../models/ProductModel";
 import { APIError } from "../errors/ApiErrors";
 import CategoryModel from "../models/CategoryModel";
 import SubCategoryModel from "../models/SubCategory";
+import SubCategory1Model from "../models/SubCategory1";
 
 // Helper: auto-calculate discount
 const calculateDiscount = (oldPrice: number, newPrice: number) => {
@@ -45,6 +46,7 @@ const formatProduct = (obj: any) => {
     ...obj,
     category: obj.category?.name || obj.category,
     subCategory: obj.subCategory?.name || obj.subCategory,
+    subCategory1: obj.subCategory1?.name || obj.subCategory1,
     sizes: Array.isArray(obj.sizes) && obj.sizes.length > 0 ? obj.sizes : undefined,
     colors: Array.isArray(obj.colors) && obj.colors.length > 0 ? obj.colors : undefined,
     discount: discount > 0 ? discount : undefined,
@@ -58,9 +60,10 @@ const formatProduct = (obj: any) => {
 
 export const getSoldOutProducts = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const products = await ProductModel.find({ stock: { $lt: 1 } })
+    const products = await ProductModel.find({ $or: [{ isSoldOut: true }, { stock: { $lt: 1 } }] })
       .populate("category")
-      .populate("subCategory");
+      .populate("subCategory")
+      .populate("subCategory1");
 
     res.json(products);
   } catch (error) {
@@ -78,9 +81,11 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
       nameSi,
       category, // user can give category name
       subCategory, // user can give subcategory name
+      subCategory1, // user can give sub-subcategory name
       descriptionEn,
       descriptionSi,
       unit,
+      cost,
       oldPrice,
       newPrice,
       rating,
@@ -88,6 +93,7 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
       sizes,
       colors,
       isActive,
+      isSoldOut,
       stock,
     } = req.body;
 
@@ -134,6 +140,23 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
       }
     }
 
+    let subCategory1Doc = null;
+    if (subCategory1 && subCategoryDoc) {
+      // Match sub-subcategory by name (case-insensitive) OR titleKey
+      subCategory1Doc = await SubCategory1Model.findOne({
+        subCategory: subCategoryDoc._id,
+        $or: [
+          { titleKey: subCategory1.toLowerCase() },
+          { name: { $regex: new RegExp(`^${subCategory1}$`, "i") } },
+        ],
+      });
+
+      if (!subCategory1Doc) {
+        if (req.file) removeUpload(req.file.filename);
+        return res.status(400).json({ message: "Invalid SubCategory1" });
+      }
+    }
+
     const oldP = Number(oldPrice) || 0;
     const newP = Number(newPrice) || 0;
 
@@ -143,10 +166,12 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
       nameSi,
       category: categoryDoc._id,
       subCategory: subCategoryDoc?._id,
+      subCategory1: subCategory1Doc?._id,
       descriptionEn,
       descriptionSi,
       image,
       unit,
+      cost: Number(cost) || 0,
       oldPrice: oldP,
       newPrice: newP,
       discount: calculateDiscount(oldP, newP),
@@ -155,6 +180,7 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
       sizes: parseList(sizes),
       colors: parseList(colors),
       isActive: isActive === undefined ? true : isActive !== "false" && isActive !== false,
+      isSoldOut: isSoldOut === true || isSoldOut === "true",
       stock: Number(stock) || 0,
     });
 
@@ -168,7 +194,7 @@ export const createProduct = async (req: Request, res: Response, next: NextFunct
 // Get all products
 export const getAllProducts = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const products = await ProductModel.find().populate("category").populate("subCategory");
+    const products = await ProductModel.find().populate("category").populate("subCategory").populate("subCategory1");
     const formattedProducts = products.map((p) => formatProduct(p.toObject()));
     res.json(formattedProducts);
   } catch (error) {
@@ -182,7 +208,7 @@ export const getProductById = async (req: Request, res: Response, next: NextFunc
     const id = req.params.id as string;
     if (!mongoose.Types.ObjectId.isValid(id)) throw new APIError(400, "Invalid product ID");
 
-    const product = await ProductModel.findById(id).populate("category").populate("subCategory");
+    const product = await ProductModel.findById(id).populate("category").populate("subCategory").populate("subCategory1");
     if (!product) throw new APIError(404, "Product not found");
 
     res.json(formatProduct(product.toObject()));
@@ -195,7 +221,8 @@ export const getProducts = async (req: Request, res: Response, next: NextFunctio
   try {
     const products = await ProductModel.find()
       .populate("category")
-      .populate("subCategory");
+      .populate("subCategory")
+      .populate("subCategory1");
 
     res.json(products);
   } catch (error) {
@@ -247,10 +274,26 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
           return res.status(400).json({ message: "Invalid SubCategory" });
         }
         updateData.subCategory = subDoc._id;
+
+        if (updateData.subCategory1) {
+          const sub1Doc = await SubCategory1Model.findOne({
+            subCategory: subDoc._id,
+            $or: [
+              { titleKey: String(updateData.subCategory1).toLowerCase() },
+              { name: { $regex: new RegExp(`^${updateData.subCategory1}$`, "i") } },
+            ],
+          });
+          if (!sub1Doc) {
+            if (req.file) removeUpload(req.file.filename);
+            return res.status(400).json({ message: "Invalid SubCategory1" });
+          }
+          updateData.subCategory1 = sub1Doc._id;
+        }
       }
     }
 
     // Numbers / arrays come in as strings over multipart — coerce them
+    if (updateData.cost !== undefined) updateData.cost = Number(updateData.cost) || 0;
     if (updateData.oldPrice !== undefined) updateData.oldPrice = Number(updateData.oldPrice) || 0;
     if (updateData.newPrice !== undefined) updateData.newPrice = Number(updateData.newPrice) || 0;
     if (updateData.stock !== undefined) updateData.stock = Number(updateData.stock) || 0;
@@ -258,6 +301,8 @@ export const updateProduct = async (req: Request, res: Response, next: NextFunct
     if (updateData.colors !== undefined) updateData.colors = parseList(updateData.colors);
     if (updateData.isActive !== undefined)
       updateData.isActive = updateData.isActive !== "false" && updateData.isActive !== false;
+    if (updateData.isSoldOut !== undefined)
+      updateData.isSoldOut = updateData.isSoldOut === true || updateData.isSoldOut === "true";
 
     if (updateData.oldPrice !== undefined && updateData.newPrice !== undefined) {
       updateData.discount = calculateDiscount(updateData.oldPrice, updateData.newPrice);

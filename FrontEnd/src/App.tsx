@@ -22,6 +22,7 @@ import BlogPage from "./pages/BlogPage";
 import { RoleRoute } from "./components/RoleRoute";
 import AdminOverview from "./pages/admin/AdminOverview";
 import AdminProducts from "./pages/admin/AdminProducts";
+import AdminCategories from "./pages/admin/AdminCategories";
 import AdminOrders from "./pages/admin/AdminOrders";
 import AdminUsers from "./pages/admin/AdminUsers";
 
@@ -55,6 +56,7 @@ export default function App() {
         >
           <Route index element={<AdminOverview />} />
           <Route path="products" element={<AdminProducts />} />
+          <Route path="categories" element={<AdminCategories />} />
           <Route path="orders" element={<AdminOrders />} />
           <Route path="users" element={<AdminUsers />} />
         </Route>

@@ -17,7 +17,13 @@ export default function ProductDetailsModal({ product, onClose }: { product: Pro
   const displayPrice = hasDiscount ? product.newPrice : product.price;
   const rating = Math.round(product.rating ?? 0);
 
+  // An admin can flag a product Sold Out regardless of the stock count
+  const soldOut = !!product.isSoldOut;
+  const inStock = !soldOut && product.stock >= 1;
+  const unavailableLabel = soldOut ? t("soldOut") : t("outOfStock");
+
   const handleAdd = () => {
+    if (!inStock) return;
     if (product.sizes?.length && !size) { setSizeError(t("select_size_error")); return; }
     addToCart({
       id: product._id || product.pluNumber,
@@ -125,9 +131,17 @@ export default function ProductDetailsModal({ product, onClose }: { product: Pro
                 </div>
               </div>
 
-              <button onClick={handleAdd}
-                className="mt-auto w-full bg-[#1e3a5f] text-white py-3.5 rounded-xl font-bold flex justify-center items-center gap-2 hover:bg-[#2a4a7c] transition shadow-sm cursor-pointer">
-                <ShoppingCart className="w-4 h-4" /> {t("add_to_cart")}
+              <button onClick={handleAdd} disabled={!inStock}
+                className={`mt-auto w-full py-3.5 rounded-xl font-bold flex justify-center items-center gap-2 transition shadow-sm ${
+                  inStock
+                    ? "bg-[#1e3a5f] text-white hover:bg-[#2a4a7c] cursor-pointer"
+                    : "bg-slate-100 text-slate-400 cursor-not-allowed"
+                }`}>
+                {inStock ? (
+                  <><ShoppingCart className="w-4 h-4" /> {t("add_to_cart")}</>
+                ) : (
+                  unavailableLabel
+                )}
               </button>
             </div>
           </div>

@@ -41,7 +41,7 @@ const translations = {
 
     /* TRENDING */
     trendingBadge: "TRENDING COLLECTIONS",
-    trendingTitle: "Best Organic Categories",
+    trendingTitle: "Popular Categories",
 
     cat_products: "Organic Lifestyle Products",
     cat_products_sub: "Pure • Natural • Sustainable",
@@ -160,6 +160,7 @@ const translations = {
     stock: "Stock",
     inStock: "In Stock",
     outOfStock: "Out of Stock",
+    soldOut: "Sold Out",
     edit: "Edit",
     /* ===== MEGA MENU TITLES ===== */
     groceryShop: "Grocery Shop",
@@ -617,9 +618,18 @@ const translations = {
     City: "City",
     Location_Type: "Location Type",
     home1: "Home",
+    house: "House",
+    apartment: "Apartment",
     office: "Office",
+    hospital: "Hospital",
+    school: "School",
+    funeralHome: "Funeral Home",
+    weddingReception: "Wedding Reception",
     other: "Other",
     Select_Option: "Select Option",
+    Address_Details: "Address Details",
+    Sender_Name: "Sender Name",
+    Your_Name: "Your Name",
     Delivery_Date: "Delivery Date",
     Payment_Info: "Payment Information",
     Card_No: "Card Number",
@@ -677,7 +687,7 @@ const translations = {
 
     /* TRENDING */
     trendingBadge: "ප්‍රවණතා එකතු",
-    trendingTitle: "ජෛවීය කාණ්ඩ",
+    trendingTitle: "ජනප්‍රිය කාණ්ඩ",
 
     cat_products: "ජෛවීය ජීවන රටා නිෂ්පාදන",
     cat_products_sub: "පිරිසිදු • ස්වභාවික • පාරිසරික",
@@ -767,6 +777,7 @@ const translations = {
     stock: "තොග",
     inStock: "තොග ඇත",
     outOfStock: "තොග අවසන්",
+    soldOut: "විකිණී අවසන්",
     edit: "සංස්කරණය කරන්න",
     delete: "මකන්න",
     /* Best offer PAGE */
@@ -1238,9 +1249,18 @@ const translations = {
     City: "නගරය",
     Location_Type: "ස්ථානයේ වර්ගය",
     home1: "නිවස",
+    house: "නිවස",
+    apartment: "මහල් නිවාසය",
     office: "කාර්යාලය",
+    hospital: "රෝහල",
+    school: "පාසල",
+    funeralHome: "අවමංගල්‍ය මන්දිරය",
+    weddingReception: "විවාහ මංගල උත්සවය",
     other: "වෙනත්",
     Select_Option: "විකල්පයක් තෝරන්න",
+    Address_Details: "ලිපින විස්තර",
+    Sender_Name: "යවන්නාගේ නම",
+    Your_Name: "ඔබේ නම",
     Delivery_Date: "බෙදාහැරීමේ දිනය",
     Payment_Info: "ගෙවීම් තොරතුරු",
     Card_No: "කාඩ් අංකය",

@@ -45,15 +45,15 @@ export default function ProductTable({ products, onEdit, refresh }: any) {
                 </td>
                 <td className="px-5 py-3 text-slate-500 text-center">{p.sold || 0}</td>
                 <td className="px-5 py-3">
-                  {p.stock > 0 ? (
+                  {p.isSoldOut || p.stock <= 0 ? (
+                    <span className="inline-flex items-center gap-1 bg-red-50 text-red-500 px-2.5 py-1 rounded-full text-xs font-semibold">
+                      <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
+                      {p.isSoldOut ? "Sold Out" : "Out"}
+                    </span>
+                  ) : (
                     <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-600 px-2.5 py-1 rounded-full text-xs font-semibold">
                       <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
                       {p.stock}
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 bg-red-50 text-red-500 px-2.5 py-1 rounded-full text-xs font-semibold">
-                      <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />
-                      Out
                     </span>
                   )}
                 </td>

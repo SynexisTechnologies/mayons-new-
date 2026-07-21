@@ -1,5 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import CategoryModel from "../models/CategoryModel";
+import ProductModel from "../models/ProductModel";
 import { APIError } from "../errors/ApiErrors";
 
 export const createCategory = async (
@@ -117,6 +118,45 @@ export const updateCategory = async (
 
 
 
+
+// Apply a single discount % to every product in a category (MRP-based)
+export const applyCategoryDiscount = async (
+  req: Request,
+  res: Response,
+  next: NextFunction
+) => {
+  try {
+    const category = await CategoryModel.findById(req.params.id);
+    if (!category) {
+      throw new APIError(404, "Category not found");
+    }
+
+    const pct = Number(req.body.discount);
+    if (!Number.isFinite(pct) || pct < 0 || pct > 100) {
+      throw new APIError(400, "discount must be a number between 0 and 100");
+    }
+
+    category.discount = pct;
+    await category.save();
+
+    const products = await ProductModel.find({ category: category._id });
+    await Promise.all(
+      products.map((p) => {
+        p.newPrice = Math.round(p.oldPrice * (1 - pct / 100));
+        p.discount = pct;
+        return p.save();
+      })
+    );
+
+    res.status(200).json({
+      success: true,
+      message: `Applied ${pct}% discount to ${products.length} product(s)`,
+      category,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 export const deleteCategory = async (
   req: Request,

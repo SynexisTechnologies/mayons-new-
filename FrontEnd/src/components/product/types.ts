@@ -8,6 +8,7 @@ export type Product = {
 
   category: string;       // ObjectId as string
   subCategory?: string;   // ObjectId as string
+  subCategory1?: string;  // ObjectId as string
 
   descriptionEn: string;
   descriptionSi: string;
@@ -16,6 +17,7 @@ export type Product = {
 
   unit?: string;
 
+  cost?: number;
   oldPrice: number;
   newPrice: number;
   price?: number;
@@ -27,6 +29,7 @@ export type Product = {
   colors?: string[];
 
   isActive: boolean;
+  isSoldOut?: boolean;
   stock: number;
   sold?: number;
 
